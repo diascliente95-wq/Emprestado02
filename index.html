@@ -6,987 +6,447 @@
 <meta name="theme-color" content="#1e3c72">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="manifest.json">
-<title>💰 Emprestimos 30%</title>
+<title>Emprestimos 30%</title>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<!-- Bibliotecas Estáveis -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-  html, body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
-  input, textarea { -webkit-user-select: text; user-select: text; }
-  body { background: linear-gradient(135deg, #1e3c72, #2a5298); min-height: 100vh; padding: 15px; padding-top: calc(15px + env(safe-area-inset-top)); padding-bottom: calc(15px + env(safe-area-inset-bottom)); color: #fff; }
-  .container { max-width: 1200px; margin: 0 auto; }
-  h1 { text-align: center; margin-bottom: 15px; font-size: 1.5em; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-  .card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); }
-  h3 { margin-bottom: 15px; font-size: 1.1em; }
-  .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  @media (min-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-  label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85em; opacity: 0.9; }
-  input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: #fff; font-size: 1em; transition: all 0.2s; }
-  input::placeholder { color: rgba(255,255,255,0.6); }
-  input:focus { outline: none; border-color: #4ade80; background: rgba(255,255,255,0.2); }
-  button { background: linear-gradient(135deg, #4ade80, #22c55e); color: #fff; border: none; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.95em; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); min-height: 44px; width: 100%; }
-  button:hover { transform: translateY(-2px); }
-  button:active { transform: translateY(0); }
-  button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
-  button.secondary { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-  button.whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
-  button.pdf { background: linear-gradient(135deg, #dc2626, #991b1b); }
-  button.backup { background: linear-gradient(135deg, #f59e0b, #d97706); }
-  .btn-row { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-  .btn-row button { flex: 1; min-width: 120px; }
-  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
-  table { width: 100%; border-collapse: collapse; min-width: 700px; }
-  th, td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.15); font-size: 0.85em; }
-  th { background: rgba(0,0,0,0.2); font-size: 0.8em; white-space: nowrap; }
-  tr:hover { background: rgba(255,255,255,0.05); }
-  .status { padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; display: inline-block; }
-  .status.pendente { background: #fbbf24; color: #000; }
-  .status.pago { background: #4ade80; color: #000; }
-  .status.atrasado { background: #ef4444; color: #fff; }
-  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-  @media (min-width: 600px) { .stats { grid-template-columns: repeat(4, 1fr); } }
-  .stat-box { background: rgba(255,255,255,0.1); padding: 15px 10px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-  .stat-box .valor { font-size: 1.2em; font-weight: bold; color: #4ade80; word-break: break-word; }
-  .stat-box .label { font-size: 0.75em; opacity: 0.8; margin-top: 5px; }
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
-  .modal.active { display: flex; }
-  .modal-content { background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 25px; border-radius: 15px; max-width: 500px; width: 100%; text-align: center; border: 1px solid rgba(255,255,255,0.2); margin: auto; }
-  #qrcode { background: #fff; padding: 15px; border-radius: 10px; display: inline-block; margin: 15px 0; }
-  #qrcode img { display: block; max-width: 100%; height: auto; }
-  .pix-code { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.75em; word-break: break-all; margin: 10px 0; max-height: 100px; overflow-y: auto; text-align: left; }
-  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
-  .actions button { padding: 8px 12px; font-size: 0.8em; min-height: 36px; width: auto; }
-  .db-status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
-  .db-status.online { background: #4ade80; color: #000; }
-  .db-status.offline { background: #fbbf24; color: #000; }
-  .db-status.error { background: #ef4444; color: #fff; }
-  .save-indicator { display: inline-block; margin-left: 10px; font-size: 0.85em; padding: 4px 10px; border-radius: 15px; background: rgba(0,0,0,0.3); }
-  .save-indicator.saved { color: #4ade80; }
-  .save-indicator.saving { color: #fbbf24; }
-  .save-indicator.error { color: #ef4444; }
-  .tab-buttons { display: flex; gap: 8px; margin-bottom: 15px; }
-  .tab-buttons button { flex: 1; padding: 10px; }
-  .tab-buttons button.active { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
-  .preview { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; display: none; font-size: 0.9em; line-height: 1.6; }
-  .info-text { font-size: 0.85em; opacity: 0.9; margin-bottom: 15px; line-height: 1.5; }
-  .info-text a { color: #4ade80; text-decoration: underline; }
-  .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: #fff; padding: 12px 24px; border-radius: 25px; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; font-size: 0.9em; max-width: 90%; text-align: center; }
-  .toast.show { opacity: 1; }
-  .storage-info { font-size: 0.8em; opacity: 0.8; margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; }
-  .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
-  .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+    :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #4ade80; --danger: #ef4444; --text: #ffffff; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: linear-gradient(135deg, var(--primary), var(--secondary)); min-height: 100vh; color: var(--text); padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom); overscroll-behavior: none; }
+    
+    /* Componentes */
+    .card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
+    h1 { text-align: center; font-size: 1.4rem; margin-bottom: 15px; padding-top: 10px; }
+    h3 { font-size: 1rem; margin-bottom: 12px; opacity: 0.9; }
+    
+    /* Inputs e Labels */
+    label { display: block; font-size: 0.8rem; margin-bottom: 4px; opacity: 0.8; }
+    input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 16px; margin-bottom: 10px; }
+    input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    
+    /* Botões */
+    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: transform 0.1s; margin-top: 5px; color: white; }
+    button:active { transform: scale(0.98); }
+    .btn-green { background: var(--accent); color: #000; }
+    .btn-blue { background: #3b82f6; }
+    .btn-red { background: var(--danger); }
+    .btn-whats { background: #25d366; }
+    .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+    .btn-row button { flex: 1; margin-top: 0; }
+    
+    /* Stats Grid */
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .stat-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: center; }
+    .stat-val { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
+    .stat-lbl { font-size: 0.7rem; opacity: 0.7; margin-top: 2px; }
+    
+    /* Tabela Responsiva */
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 0 20px; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
+    th { background: rgba(0,0,0,0.2); position: sticky; top: 0; }
+    .status { padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+    .st-pending { background: #fbbf24; color: black; }
+    .st-paid { background: var(--accent); color: black; }
+    .st-late { background: var(--danger); }
+    
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--primary); width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.2); max-height: 90vh; overflow-y: auto; }
+    .qr-img { background: white; padding: 15px; border-radius: 10px; margin: 15px auto; display: block; max-width: 200px; }
+    .pix-code { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.7rem; word-break: break-all; margin: 10px 0; max-height: 80px; overflow-y: auto; text-align: left; }
+    
+    /* Toast */
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 12px 24px; border-radius: 25px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2000; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+    
+    /* Tabs Config */
+    .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; }
+    .tab-btn { flex: 1; padding: 10px; border-radius: 8px; background: transparent; margin: 0; font-size: 0.9rem; opacity: 0.7; }
+    .tab-btn.active { background: rgba(255,255,255,0.1); opacity: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 </style>
 </head>
 <body>
+
 <div class="container">
-  <h1>💰 Emprestimos 30% a.m.</h1>
-
-  <div style="text-align:center; margin-bottom:15px;">
-    <span class="db-status" id="dbStatus">⏳ Verificando...</span>
-    <span class="save-indicator" id="saveIndicator">💾 Pronto</span>
-  </div>
-
-  <!-- Configuração -->
-  <div class="card">
-    <h3>⚙️ Configurações</h3>
+    <h1>💰 Painel de Empréstimo</h1>
     
-    <div class="tab-buttons">
-      <button onclick="mostrarTab('pix')" id="btnTabPix" class="active">💳 Pix</button>
-      <button onclick="mostrarTab('firebase')" id="btnTabFirebase">🗄️ Banco</button>
-      <button onclick="mostrarTab('backup')" id="btnTabBackup">💾 Backup</button>
+    <!-- Status DB -->
+    <div style="text-align:center; margin-bottom:10px;">
+        <span id="dbStatus" style="font-size:0.8rem; padding:4px 12px; border-radius:20px; background:rgba(0,0,0,0.3);">🟡 Modo Offline</span>
     </div>
 
-    <!-- Tab Pix -->
-    <div id="tabPix">
-      <div class="grid">
-        <div>
-          <label>Nome do beneficiário</label>
-          <input type="text" id="cfgNome" placeholder="SEU NOME" autocomplete="off">
+    <!-- Configurações -->
+    <div class="card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('pix')">💳 Pix</button>
+            <button class="tab-btn" onclick="switchTab('db')">☁️ Nuvem</button>
         </div>
-        <div>
-          <label>Cidade</label>
-          <input type="text" id="cfgCidade" placeholder="SAO PAULO" maxlength="15" autocomplete="off">
+
+        <div id="tab-pix" class="tab-content active">
+            <label>Nome Beneficiário</label>
+            <input type="text" id="cfgNome" placeholder="SEU NOME COMPLETO">
+            <label>Cidade</label>
+            <input type="text" id="cfgCidade" placeholder="SAO PAULO" maxlength="15">
+            <label>Chave Pix</label>
+            <input type="text" id="cfgChave" placeholder="CPF, Email ou Aleatória">
+            <button class="btn-blue" onclick="saveConfig()">Salvar Dados Pix</button>
         </div>
-        <div>
-          <label>Chave Pix</label>
-          <input type="text" id="cfgChave" placeholder="CPF, e-mail, telefone ou chave" autocomplete="off">
+
+        <div id="tab-db" class="tab-content">
+            <p style="font-size:0.8rem; opacity:0.8; margin-bottom:10px;">Configure para acessar de vários dispositivos.</p>
+            <label>Firebase API Key</label>
+            <input type="text" id="fbKey">
+            <label>Auth Domain</label>
+            <input type="text" id="fbDomain">
+            <label>Project ID</label>
+            <input type="text" id="fbProject">
+            <button class="btn-blue" onclick="initFirebase()">Conectar Firebase</button>
         </div>
-      </div>
-      <button onclick="salvarConfig()" style="margin-top:15px;">💾 Salvar Configurações Pix</button>
     </div>
 
-    <!-- Tab Firebase -->
-    <div id="tabFirebase" style="display:none;">
-      <p class="info-text">
-        Configure o Firebase para salvar dados online.
-        <a href="https://console.firebase.google.com/" target="_blank">Criar projeto gratuito</a>
-      </p>
-      <div class="grid">
-        <div>
-          <label>API Key</label>
-          <input type="text" id="fbApiKey" placeholder="AIza..." autocomplete="off">
-        </div>
-        <div>
-          <label>Auth Domain</label>
-          <input type="text" id="fbAuthDomain" placeholder="seu-projeto.firebaseapp.com" autocomplete="off">
-        </div>
-        <div>
-          <label>Project ID</label>
-          <input type="text" id="fbProjectId" placeholder="seu-projeto" autocomplete="off">
-        </div>
-      </div>
-      <div class="btn-row">
-        <button onclick="salvarFirebase()">💾 Conectar Firebase</button>
-        <button onclick="migrarParaFirebase()" class="secondary">🔄 Migrar dados locais</button>
-      </div>
+    <!-- Dashboard -->
+    <div class="stats">
+        <div class="stat-box"><div class="stat-val" id="sTotal">R$ 0</div><div class="stat-lbl">Emprestado</div></div>
+        <div class="stat-box"><div class="stat-val" id="sPending">R$ 0</div><div class="stat-lbl">A Receber</div></div>
+        <div class="stat-box"><div class="stat-val" id="sReceived">R$ 0</div><div class="stat-lbl">Recebido</div></div>
+        <div class="stat-box"><div class="stat-val" id="sCount">0</div><div class="stat-lbl">Ativos</div></div>
     </div>
 
-    <!-- Tab Backup -->
-    <div id="tabBackup" style="display:none;">
-      <p class="info-text">
-        💡 Faça backup dos seus dados para não perder nada. Exporte regularmente!
-      </p>
-      <div class="btn-row">
-        <button onclick="exportarDados()" class="backup">📤 Exportar Dados</button>
-        <div class="file-input-wrapper">
-          <button class="backup">📥 Importar Dados</button>
-          <input type="file" accept=".json" onchange="importarDados(event)">
+    <!-- Novo Empréstimo -->
+    <div class="card">
+        <h3>📝 Novo Registro</h3>
+        <label>Nome Cliente</label>
+        <input type="text" id="inNome">
+        <label>WhatsApp (apenas números)</label>
+        <input type="tel" id="inTel" placeholder="11999998888">
+        <label>Valor Emprestado (R$)</label>
+        <input type="number" id="inValor" step="0.01" oninput="calcPreview()">
+        
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1"><label>Data Saída</label><input type="datetime-local" id="inData"></div>
+            <div style="flex:1"><label>Vencimento</label><input type="datetime-local" id="inVenc"></div>
         </div>
-      </div>
-      <div class="storage-info" id="storageInfo">
-        Verificando armazenamento...
-      </div>
-      <div class="btn-row">
-        <button onclick="forcarSalvamento()" class="secondary">🔄 Forçar Salvamento Agora</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Estatísticas -->
-  <div class="stats">
-    <div class="stat-box">
-      <div class="valor" id="statTotal">R$ 0,00</div>
-      <div class="label">Total Emprestado</div>
-    </div>
-    <div class="stat-box">
-      <div class="valor" id="statPendente">R$ 0,00</div>
-      <div class="label">A Receber</div>
-    </div>
-    <div class="stat-box">
-      <div class="valor" id="statRecebido">R$ 0,00</div>
-      <div class="label">Já Recebido</div>
-    </div>
-    <div class="stat-box">
-      <div class="valor" id="statQtd">0</div>
-      <div class="label">Ativos</div>
-    </div>
-  </div>
+        <div id="preview" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin:10px 0; font-size:0.85rem; display:none;">
+            Juros (30%): <span id="prevJuros" style="color:#fbbf24">R$ 0,00</span> | 
+            Total: <span id="prevTotal" style="color:var(--accent); font-weight:bold;">R$ 0,00</span>
+        </div>
 
-  <!-- Formulário -->
-  <div class="card">
-    <h3>📝 Novo Empréstimo</h3>
-    <div class="grid">
-      <div>
-        <label>Nome do cliente *</label>
-        <input type="text" id="inpNome" placeholder="Nome completo" autocomplete="off">
-      </div>
-      <div>
-        <label>Telefone (WhatsApp)</label>
-        <input type="tel" id="inpTelefone" placeholder="11999998888" autocomplete="off">
-      </div>
-      <div>
-        <label>Valor emprestado (R$) *</label>
-        <input type="number" id="inpValor" step="0.01" min="0" placeholder="0,00" inputmode="decimal">
-      </div>
-      <div>
-        <label>Data/Hora do empréstimo *</label>
-        <input type="datetime-local" id="inpData">
-      </div>
-      <div>
-        <label>Vencimento *</label>
-        <input type="datetime-local" id="inpVencimento">
-      </div>
+        <div class="btn-row">
+            <button class="btn-green" onclick="addLoan()">➕ Registrar</button>
+            <button class="btn-red" onclick="generatePDF()">📄 PDF</button>
+        </div>
     </div>
-    
-    <div class="preview" id="preview">
-      <strong>Prévia:</strong><br>
-      💵 Valor: <span id="prevEmp">R$ 0,00</span><br>
-      📈 Juros (30% a.m.): <span id="prevJuros">R$ 0,00</span><br>
-      💰 Total a receber: <span id="prevTotal" style="color:#4ade80; font-weight:bold;">R$ 0,00</span>
-    </div>
-    
-    <div class="btn-row">
-      <button onclick="adicionarEmprestimo()">➕ Registrar</button>
-      <button onclick="gerarRelatorio()" class="pdf">📄 Relatório PDF</button>
-    </div>
-  </div>
 
-  <!-- Lista -->
-  <div class="card">
-    <h3>📋 Empréstimos</h3>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Telefone</th>
-            <th>Valor</th>
-            <th>Total c/ Juros</th>
-            <th>Data</th>
-            <th>Vencimento</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tabela"></tbody>
-      </table>
+    <!-- Lista -->
+    <div class="card">
+        <h3>📋 Registros</h3>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Cliente</th><th>Valor</th><th>Total</th><th>Venc.</th><th>Status</th><th>Ação</th></tr></thead>
+                <tbody id="tbBody"></tbody>
+            </table>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- Modal QR Code -->
-<div class="modal" id="modalPix">
-  <div class="modal-content">
-    <h2>📱 Pagamento via Pix</h2>
-    <p id="modalCliente" style="margin:10px 0;"></p>
-    <p><strong>Valor: <span id="modalValor" style="color:#4ade80;"></span></strong></p>
-    <div id="qrcode"></div>
-    <div class="pix-code" id="pixCode"></div>
-    <div class="btn-row">
-      <button class="secondary" onclick="copiarPix()">📋 Copiar</button>
-      <button class="whatsapp" onclick="enviarWhatsApp()">📱 WhatsApp</button>
+<!-- Modal Pix -->
+<div class="modal" id="pixModal">
+    <div class="modal-content">
+        <h3>Pagamento Pix</h3>
+        <p id="mCliente" style="margin:5px 0; opacity:0.8;"></p>
+        <h2 id="mValor" style="color:var(--accent); margin-bottom:10px;"></h2>
+        
+        <img id="qrImg" class="qr-img" alt="QR Code Pix">
+        <div class="pix-code" id="pixCodeText"></div>
+        
+        <div class="btn-row">
+            <button class="btn-blue" onclick="copyPix()">📋 Copiar</button>
+            <button class="btn-whats" onclick="sendWhats()">📱 Zap</button>
+        </div>
+        <button class="btn-red" onclick="closeModal()" style="margin-top:15px;">Fechar</button>
     </div>
-    <button class="danger" onclick="fecharModal()" style="margin-top:10px;">✖ Fechar</button>
-  </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast">Mensagem</div>
 
 <script>
-// ============ SISTEMA DE STORAGE ROBUSTO ============
-const Storage = {
-  // Detecta ambiente
-  isCapacitor: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()),
-  hasCapacitorPreferences: () => !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Preferences),
-  
-  // Método principal de salvamento
-  async set(key, value) {
-    const data = JSON.stringify(value);
-    
-    // 1. Tenta Capacitor Preferences (melhor para apps nativos)
-    if (this.hasCapacitorPreferences()) {
-      try {
-        await window.Capacitor.Plugins.Preferences.set({ key, value: data });
-        return true;
-      } catch (e) {
-        console.warn('Capacitor Preferences falhou:', e);
-      }
-    }
-    
-    // 2. Tenta localStorage
-    try {
-      localStorage.setItem(key, data);
-      return true;
-    } catch (e) {
-      console.error('localStorage falhou:', e);
-    }
-    
-    // 3. Tenta sessionStorage como último recurso
-    try {
-      sessionStorage.setItem(key, data);
-      return true;
-    } catch (e) {
-      console.error('sessionStorage falhou:', e);
-    }
-    
-    return false;
-  },
-  
-  // Método principal de leitura
-  async get(key, defaultValue = null) {
-    // 1. Tenta Capacitor Preferences
-    if (this.hasCapacitorPreferences()) {
-      try {
-        const result = await window.Capacitor.Plugins.Preferences.get({ key });
-        if (result && result.value) {
-          return JSON.parse(result.value);
-        }
-      } catch (e) {
-        console.warn('Capacitor Preferences get falhou:', e);
-      }
-    }
-    
-    // 2. Tenta localStorage
-    try {
-      const data = localStorage.getItem(key);
-      if (data) return JSON.parse(data);
-    } catch (e) {
-      console.error('localStorage get falhou:', e);
-    }
-    
-    // 3. Tenta sessionStorage
-    try {
-      const data = sessionStorage.getItem(key);
-      if (data) return JSON.parse(data);
-    } catch (e) {
-      console.error('sessionStorage get falhou:', e);
-    }
-    
-    return defaultValue;
-  },
-  
-  async remove(key) {
-    if (this.hasCapacitorPreferences()) {
-      try { await window.Capacitor.Plugins.Preferences.remove({ key }); } catch(e) {}
-    }
-    try { localStorage.removeItem(key); } catch(e) {}
-    try { sessionStorage.removeItem(key); } catch(e) {}
-  },
-  
-  // Salva com backup automático
-  async salvarComBackup(key, value) {
-    const sucesso = await this.set(key, value);
-    // Cria backup com timestamp
-    if (sucesso) {
-      await this.set(key + '_backup', {
-        dados: value,
-        timestamp: Date.now()
-      });
-    }
-    return sucesso;
-  },
-  
-  // Recupera com fallback para backup
-  async recuperarComBackup(key) {
-    let dados = await this.get(key);
-    if (dados !== null) return dados;
-    
-    // Tenta o backup
-    const backup = await this.get(key + '_backup');
-    if (backup && backup.dados) {
-      console.log('🔄 Recuperado do backup!');
-      // Restaura o backup principal
-      await this.set(key, backup.dados);
-      return backup.dados;
-    }
-    
-    return null;
-  }
-};
-
-// ============ VARIÁVEIS GLOBAIS ============
-let emprestimos = [];
-let config = {};
-let firebaseConfig = null;
+/** ESTADO GLOBAL **/
+let loans = JSON.parse(localStorage.getItem('loans_v2') || '[]');
+let config = JSON.parse(localStorage.getItem('pix_cfg') || '{}');
 let db = null;
-let usandoFirebase = false;
-let emprestimoAtual = null;
+let isOnline = false;
+let currentLoan = null;
 
-// ============ INICIALIZAÇÃO ============
-window.addEventListener('load', async () => {
-  mostrarToast('⏳ Carregando dados...');
-  atualizarSaveIndicator('saving', '⏳ Carregando...');
-  
-  try {
-    // Carrega configurações Pix
-    config = await Storage.recuperarComBackup('configPix') || {};
-    if (config.nome) document.getElementById('cfgNome').value = config.nome;
-    if (config.cidade) document.getElementById('cfgCidade').value = config.cidade;
-    if (config.chave) document.getElementById('cfgChave').value = config.chave;
-    
-    // Carrega config Firebase
-    firebaseConfig = await Storage.recuperarComBackup('firebaseConfig');
-    if (firebaseConfig) {
-      document.getElementById('fbApiKey').value = firebaseConfig.apiKey || '';
-      document.getElementById('fbAuthDomain').value = firebaseConfig.authDomain || '';
-      document.getElementById('fbProjectId').value = firebaseConfig.projectId || '';
-      await conectarFirebase();
-    }
-    
-    // Carrega empréstimos (se não estiver usando Firebase)
-    if (!usandoFirebase) {
-      const dadosSalvos = await Storage.recuperarComBackup('emprestimos');
-      emprestimos = dadosSalvos || [];
-      atualizarStatusDB();
-    }
+/** INICIALIZAÇÃO **/
+window.onload = () => {
+    // Carregar configs
+    if(config.nome) document.getElementById('cfgNome').value = config.nome;
+    if(config.cidade) document.getElementById('cfgCidade').value = config.cidade;
+    if(config.chave) document.getElementById('cfgChave').value = config.chave;
     
     // Datas padrão
-    const agora = new Date();
-    const local = new Date(agora.getTime() - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
-    document.getElementById('inpData').value = local;
-    const venc = new Date(agora.getTime() + 30*24*60*60*1000 - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
-    document.getElementById('inpVencimento').value = venc;
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('inData').value = now.toISOString().slice(0,16);
     
-    document.getElementById('inpValor').addEventListener('input', atualizarPreview);
+    const venc = new Date(now);
+    venc.setDate(venc.getDate() + 30);
+    document.getElementById('inVenc').value = venc.toISOString().slice(0,16);
     
-    atualizarInfoStorage();
-    renderizar();
-    
-    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} registros salvos`);
-    mostrarToast(`✅ ${emprestimos.length} empréstimos carregados`);
-    
-  } catch (error) {
-    console.error('Erro ao inicializar:', error);
-    mostrarToast('❌ Erro ao carregar dados');
-    atualizarSaveIndicator('error', '❌ Erro');
-  }
-});
+    render();
+};
 
-// Salva automaticamente antes de fechar a página
-window.addEventListener('beforeunload', async () => {
-  if (!usandoFirebase) {
-    await Storage.salvarComBackup('emprestimos', emprestimos);
-  }
-});
+/** UTILITÁRIOS **/
+const fmt = v => 'R$ ' + Number(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-BR') + ' ' + new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '-';
+const toast = msg => { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); };
+const switchTab = tab => {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+};
 
-// Salva quando app entra em background (Capacitor)
-document.addEventListener('visibilitychange', async () => {
-  if (document.hidden && !usandoFirebase) {
-    await Storage.salvarComBackup('emprestimos', emprestimos);
-  }
-});
-
-// ============ FUNÇÕES DE INTERFACE ============
-function mostrarToast(msg) {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
+/** LÓGICA DE NEGÓCIO **/
+function calcPreview() {
+    const v = parseFloat(document.getElementById('inValor').value) || 0;
+    const j = v * 0.30;
+    document.getElementById('preview').style.display = v > 0 ? 'block' : 'none';
+    document.getElementById('prevJuros').textContent = fmt(j);
+    document.getElementById('prevTotal').textContent = fmt(v + j);
 }
 
-function atualizarSaveIndicator(tipo, texto) {
-  const ind = document.getElementById('saveIndicator');
-  ind.className = 'save-indicator ' + tipo;
-  ind.textContent = texto;
+function saveConfig() {
+    config = {
+        nome: document.getElementById('cfgNome').value.toUpperCase(),
+        cidade: document.getElementById('cfgCidade').value.toUpperCase(),
+        chave: document.getElementById('cfgChave').value.trim()
+    };
+    localStorage.setItem('pix_cfg', JSON.stringify(config));
+    toast('✅ Configuração salva!');
 }
 
-function atualizarInfoStorage() {
-  const info = document.getElementById('storageInfo');
-  let texto = `📊 Status do armazenamento:\n`;
-  texto += `• Ambiente: ${Storage.isCapacitor() ? '📱 App Nativo (Capacitor)' : '🌐 Navegador'}\n`;
-  texto += `• Capacitor Preferences: ${Storage.hasCapacitorPreferences() ? '✅ Disponível' : '❌ Não disponível'}\n`;
-  texto += `• localStorage: ${testarStorage('localStorage') ? '✅ Funcionando' : '❌ Falhou'}\n`;
-  texto += `• Registros salvos: ${emprestimos.length}\n`;
-  texto += `• Modo: ${usandoFirebase ? '🟢 Firebase' : '🟡 Local'}`;
-  info.textContent = texto;
-  info.style.whiteSpace = 'pre-line';
-}
+async function addLoan() {
+    const nome = document.getElementById('inNome').value.trim();
+    const tel = document.getElementById('inTel').value.replace(/\D/g,'');
+    const val = parseFloat(document.getElementById('inValor').value);
+    const data = document.getElementById('inData').value;
+    const venc = document.getElementById('inVenc').value;
 
-function testarStorage(tipo) {
-  try {
-    const testKey = '__storage_test__';
-    if (tipo === 'localStorage') {
-      localStorage.setItem(testKey, '1');
-      localStorage.removeItem(testKey);
-      return true;
-    }
-  } catch(e) { return false; }
-  return false;
-}
+    if(!nome || !val || !data || !venc) return toast('⚠️ Preencha todos os campos!');
 
-function atualizarPreview() {
-  const valor = parseFloat(document.getElementById('inpValor').value) || 0;
-  const juros = valor * 0.30;
-  const total = valor + juros;
-  document.getElementById('preview').style.display = valor > 0 ? 'block' : 'none';
-  document.getElementById('prevEmp').textContent = formatar(valor);
-  document.getElementById('prevJuros').textContent = formatar(juros);
-  document.getElementById('prevTotal').textContent = formatar(total);
-}
+    const loan = { id: Date.now(), nome, tel, val, data, venc, status:'pendente', created: new Date().toISOString() };
 
-function mostrarTab(tab) {
-  document.getElementById('tabPix').style.display = tab === 'pix' ? 'block' : 'none';
-  document.getElementById('tabFirebase').style.display = tab === 'firebase' ? 'block' : 'none';
-  document.getElementById('tabBackup').style.display = tab === 'backup' ? 'block' : 'none';
-  document.getElementById('btnTabPix').classList.toggle('active', tab === 'pix');
-  document.getElementById('btnTabFirebase').classList.toggle('active', tab === 'firebase');
-  document.getElementById('btnTabBackup').classList.toggle('active', tab === 'backup');
-  if (tab === 'backup') atualizarInfoStorage();
-}
-
-function atualizarStatusDB() {
-  const status = document.getElementById('dbStatus');
-  if (usandoFirebase) {
-    status.textContent = '🟢 Online (Firebase)';
-    status.className = 'db-status online';
-  } else {
-    status.textContent = '🟡 Offline (Local)';
-    status.className = 'db-status offline';
-  }
-}
-
-// ============ CONFIGURAÇÕES ============
-async function salvarConfig() {
-  atualizarSaveIndicator('saving', '💾 Salvando...');
-  config = {
-    nome: document.getElementById('cfgNome').value.toUpperCase().trim(),
-    cidade: document.getElementById('cfgCidade').value.toUpperCase().trim(),
-    chave: document.getElementById('cfgChave').value.trim()
-  };
-  if (!config.nome || !config.cidade || !config.chave) {
-    mostrarToast('⚠️ Preencha todos os campos!');
-    atualizarSaveIndicator('error', '❌ Erro');
-    return;
-  }
-  const sucesso = await Storage.salvarComBackup('configPix', config);
-  if (sucesso) {
-    mostrarToast('✅ Configurações salvas!');
-    atualizarSaveIndicator('saved', '💾 Salvo!');
-  } else {
-    mostrarToast('❌ Erro ao salvar!');
-    atualizarSaveIndicator('error', '❌ Falhou');
-  }
-}
-
-async function salvarFirebase() {
-  const apiKey = document.getElementById('fbApiKey').value.trim();
-  const authDomain = document.getElementById('fbAuthDomain').value.trim();
-  const projectId = document.getElementById('fbProjectId').value.trim();
-  
-  if (!apiKey || !authDomain || !projectId) {
-    mostrarToast('⚠️ Preencha todos os campos!');
-    return;
-  }
-  
-  firebaseConfig = { apiKey, authDomain, projectId };
-  await Storage.salvarComBackup('firebaseConfig', firebaseConfig);
-  await conectarFirebase();
-}
-
-async function conectarFirebase() {
-  atualizarSaveIndicator('saving', '⏳ Conectando...');
-  try {
-    if (typeof firebase === 'undefined') throw new Error('Firebase não carregado');
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    await db.collection('emprestimos').limit(1).get();
-    usandoFirebase = true;
-    
-    // Carrega dados iniciais
-    await carregarDados();
-    
-    // Listener em tempo real
-    db.collection('emprestimos').onSnapshot(async (snapshot) => {
-      emprestimos = [];
-      snapshot.forEach(doc => {
-        emprestimos.push({ id: doc.id, ...doc.data() });
-      });
-      // Cache local dos dados do Firebase
-      await Storage.salvarComBackup('emprestimos_cache', emprestimos);
-      renderizar();
-      atualizarSaveIndicator('saved', `💾 ${emprestimos.length} sincronizados`);
-    }, (error) => {
-      console.error('Erro listener:', error);
-      // Se falhar, usa cache local
-      recuperarDoCache();
-    });
-    
-    atualizarStatusDB();
-    mostrarToast('✅ Firebase conectado!');
-  } catch (error) {
-    console.error('Erro Firebase:', error);
-    mostrarToast('❌ Erro ao conectar Firebase');
-    usandoFirebase = false;
-    await recuperarDoCache();
-    atualizarStatusDB();
-  }
-}
-
-async function recuperarDoCache() {
-  const cache = await Storage.recuperarComBackup('emprestimos_cache');
-  if (cache) {
-    emprestimos = cache;
-    mostrarToast('🔄 Usando cache local');
-  } else {
-    const locais = await Storage.recuperarComBackup('emprestimos');
-    emprestimos = locais || [];
-  }
-  atualizarSaveIndicator('saved', `💾 ${emprestimos.length} registros`);
-  renderizar();
-}
-
-async function carregarDados() {
-  if (usandoFirebase && db) {
-    const snapshot = await db.collection('emprestimos').get();
-    emprestimos = [];
-    snapshot.forEach(doc => {
-      emprestimos.push({ id: doc.id, ...doc.data() });
-    });
-    await Storage.salvarComBackup('emprestimos_cache', emprestimos);
-    renderizar();
-  }
-}
-
-async function migrarParaFirebase() {
-  if (!usandoFirebase) {
-    mostrarToast('⚠️ Configure o Firebase primeiro!');
-    return;
-  }
-  const locais = await Storage.recuperarComBackup('emprestimos') || [];
-  if (locais.length === 0) {
-    mostrarToast('Sem dados locais para migrar');
-    return;
-  }
-  if (!confirm(`Migrar ${locais.length} empréstimos para o Firebase?`)) return;
-  
-  atualizarSaveIndicator('saving', '🔄 Migrando...');
-  try {
-    for (const emp of locais) {
-      const { id, ...dados } = emp;
-      await db.collection('emprestimos').add(dados);
-    }
-    mostrarToast('✅ Dados migrados!');
-    await Storage.remove('emprestimos');
-    atualizarSaveIndicator('saved', '✅ Migrado!');
-  } catch (error) {
-    console.error(error);
-    mostrarToast('❌ Erro ao migrar');
-    atualizarSaveIndicator('error', '❌ Erro');
-  }
-}
-
-// ============ EMPRÉSTIMOS ============
-async function adicionarEmprestimo() {
-  const nome = document.getElementById('inpNome').value.trim();
-  const telefone = document.getElementById('inpTelefone').value.trim().replace(/\D/g, '');
-  const valor = parseFloat(document.getElementById('inpValor').value);
-  const data = document.getElementById('inpData').value;
-  const vencimento = document.getElementById('inpVencimento').value;
-  
-  if (!nome || !valor || !data || !vencimento) {
-    mostrarToast('⚠️ Preencha os campos obrigatórios!');
-    return;
-  }
-  
-  atualizarSaveIndicator('saving', '💾 Salvando...');
-  
-  const novoEmp = {
-    nome, telefone, valor, data, vencimento,
-    status: 'pendente',
-    criadoEm: new Date().toISOString()
-  };
-  
-  try {
-    if (usandoFirebase && db) {
-      await db.collection('emprestimos').add(novoEmp);
+    if(isOnline && db) {
+        await db.collection('loans').add(loan);
     } else {
-      novoEmp.id = Date.now();
-      emprestimos.push(novoEmp);
-      const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
-      if (!sucesso) {
-        mostrarToast('❌ ERRO: Dados não foram salvos!');
-        atualizarSaveIndicator('error', '❌ Falhou');
-        return;
-      }
+        loans.push(loan);
+        localStorage.setItem('loans_v2', JSON.stringify(loans));
     }
     
-    document.getElementById('inpNome').value = '';
-    document.getElementById('inpTelefone').value = '';
-    document.getElementById('inpValor').value = '';
+    // Reset form
+    document.getElementById('inNome').value = '';
+    document.getElementById('inTel').value = '';
+    document.getElementById('inValor').value = '';
     document.getElementById('preview').style.display = 'none';
-    
-    renderizar();
-    mostrarToast('✅ Empréstimo registrado e salvo!');
-    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
-  } catch (error) {
-    console.error(error);
-    mostrarToast('❌ Erro ao registrar');
-    atualizarSaveIndicator('error', '❌ Erro');
-  }
+    render();
+    toast('✅ Registrado com sucesso!');
 }
 
-function calcularJuros(emp) {
-  const inicio = new Date(emp.data);
-  const fim = new Date(emp.vencimento);
-  const dias = (fim - inicio) / (1000*60*60*24);
-  const meses = dias / 30;
-  return emp.valor * 0.30 * meses;
+function getInterest(l) {
+    const days = (new Date(l.venc) - new Date(l.data)) / (1000*60*60*24);
+    return l.val * 0.30 * (days/30);
 }
 
-function calcularStatus(emp) {
-  if (emp.status === 'pago') return 'pago';
-  const venc = new Date(emp.vencimento);
-  if (venc < new Date()) return 'atrasado';
-  return 'pendente';
+function getStatus(l) {
+    if(l.status === 'pago') return 'pago';
+    return new Date(l.venc) < new Date() ? 'atrasado' : 'pendente';
 }
 
-function renderizar() {
-  const tbody = document.getElementById('tabela');
-  tbody.innerHTML = '';
-  
-  let totalEmp = 0, totalReceber = 0, totalRecebido = 0, ativos = 0;
-  
-  emprestimos.forEach(emp => {
-    const juros = calcularJuros(emp);
-    const total = emp.valor + juros;
-    const status = calcularStatus(emp);
-    
-    totalEmp += emp.valor;
-    if (status === 'pago') totalRecebido += total;
-    else { totalReceber += total; ativos++; }
-    
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${emp.nome}</td>
-      <td>${emp.telefone || '-'}</td>
-      <td>${formatar(emp.valor)}</td>
-      <td><strong>${formatar(total)}</strong></td>
-      <td>${formatarData(emp.data)}</td>
-      <td>${formatarData(emp.vencimento)}</td>
-      <td><span class="status ${status}">${status.toUpperCase()}</span></td>
-      <td>
-        <div class="actions">
-          <button onclick="gerarPix('${emp.id}')">📱</button>
-          ${status !== 'pago' ? `<button class="secondary" onclick="marcarPago('${emp.id}')">✓</button>` : ''}
-          <button class="danger" onclick="excluir('${emp.id}')">🗑</button>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-  
-  document.getElementById('statTotal').textContent = formatar(totalEmp);
-  document.getElementById('statPendente').textContent = formatar(totalReceber);
-  document.getElementById('statRecebido').textContent = formatar(totalRecebido);
-  document.getElementById('statQtd').textContent = ativos;
+function render() {
+    const tb = document.getElementById('tbBody');
+    tb.innerHTML = '';
+    let totEmp=0, totRec=0, totPend=0, ativos=0;
+
+    loans.forEach(l => {
+        const jur = getInterest(l);
+        const total = l.val + jur;
+        const st = getStatus(l);
+        
+        totEmp += l.val;
+        if(st==='pago') totRec += total; else { totPend += total; ativos++; }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${l.nome}</td>
+            <td>${fmt(l.val)}</td>
+            <td style="color:var(--accent)">${fmt(total)}</td>
+            <td>${fmtDate(l.venc)}</td>
+            <td><span class="status st-${st==='pago'?'paid':st==='atrasado'?'late':'pending'}">${st}</span></td>
+            <td>
+                <div style="display:flex;gap:5px;">
+                    <button style="padding:8px;font-size:0.7rem;margin:0;" onclick="openPix('${l.id}')">Pix</button>
+                    ${st!=='pago'?`<button style="padding:8px;font-size:0.7rem;margin:0;background:#3b82f6;" onclick="markPaid('${l.id}')">✓</button>`:''}
+                    <button style="padding:8px;font-size:0.7rem;margin:0;background:#ef4444;" onclick="delLoan('${l.id}')">🗑</button>
+                </div>
+            </td>
+        `;
+        tb.appendChild(tr);
+    });
+
+    document.getElementById('sTotal').textContent = fmt(totEmp);
+    document.getElementById('sPending').textContent = fmt(totPend);
+    document.getElementById('sReceived').textContent = fmt(totRec);
+    document.getElementById('sCount').textContent = ativos;
 }
 
-async function marcarPago(id) {
-  if (!confirm('Confirmar pagamento recebido?')) return;
-  
-  atualizarSaveIndicator('saving', '💾 Salvando...');
-  
-  try {
-    if (usandoFirebase && db) {
-      await db.collection('emprestimos').doc(id).update({
-        status: 'pago',
-        pagoEm: new Date().toISOString()
-      });
+async function markPaid(id) {
+    if(!confirm('Confirmar recebimento?')) return;
+    if(isOnline && db) {
+        await db.collection('loans').doc(id).update({status:'pago', paidAt:new Date().toISOString()});
     } else {
-      const emp = emprestimos.find(e => String(e.id) === String(id));
-      if (emp) {
-        emp.status = 'pago';
-        emp.pagoEm = new Date().toISOString();
-        const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
-        if (!sucesso) {
-          mostrarToast('❌ ERRO ao salvar!');
-          atualizarSaveIndicator('error', '❌ Falhou');
-          return;
-        }
-      }
+        const l = loans.find(x=>String(x.id)===String(id));
+        if(l) { l.status='pago'; localStorage.setItem('loans_v2', JSON.stringify(loans)); }
     }
-    renderizar();
-    mostrarToast('✅ Pagamento confirmado e salvo!');
-    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
-  } catch (error) {
-    console.error(error);
-    mostrarToast('❌ Erro ao confirmar');
-    atualizarSaveIndicator('error', '❌ Erro');
-  }
+    render();
+    toast('✅ Pago!');
 }
 
-async function excluir(id) {
-  if (!confirm('Excluir este empréstimo?')) return;
-  
-  atualizarSaveIndicator('saving', '💾 Salvando...');
-  
-  try {
-    if (usandoFirebase && db) {
-      await db.collection('emprestimos').doc(id).delete();
+async function delLoan(id) {
+    if(!confirm('Excluir registro?')) return;
+    if(isOnline && db) {
+        await db.collection('loans').doc(id).delete();
     } else {
-      emprestimos = emprestimos.filter(e => String(e.id) !== String(id));
-      const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
-      if (!sucesso) {
-        mostrarToast('❌ ERRO ao salvar!');
-        atualizarSaveIndicator('error', '❌ Falhou');
-        return;
-      }
+        loans = loans.filter(x=>String(x.id)!==String(id));
+        localStorage.setItem('loans_v2', JSON.stringify(loans));
     }
-    renderizar();
-    mostrarToast('🗑️ Excluído e salvo!');
-    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
-  } catch (error) {
-    console.error(error);
-    mostrarToast('❌ Erro ao excluir');
-    atualizarSaveIndicator('error', '❌ Erro');
-  }
+    render();
 }
 
-// ============ BACKUP ============
-async function exportarDados() {
-  const dados = {
-    versao: '1.0',
-    exportadoEm: new Date().toISOString(),
-    config: config,
-    firebaseConfig: firebaseConfig,
-    emprestimos: emprestimos
-  };
-  
-  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `backup-emprestimos-${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  mostrarToast('✅ Backup exportado!');
+/** PIX & QR CODE **/
+function openPix(id) {
+    if(!config.chave) return toast('⚠️ Configure sua chave Pix primeiro!');
+    const l = loans.find(x=>String(x.id)===String(id));
+    if(!l) return;
+    
+    currentLoan = l;
+    const total = l.val + getInterest(l);
+    const payload = buildPixPayload(total, l.id);
+    
+    document.getElementById('mCliente').textContent = l.nome;
+    document.getElementById('mValor').textContent = fmt(total);
+    document.getElementById('pixCodeText').textContent = payload;
+    
+    // Usa API pública confiável para gerar QR (evita erro de lib local)
+    document.getElementById('qrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
+    
+    document.getElementById('pixModal').classList.add('active');
 }
 
-async function importarDados(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  if (!confirm('⚠️ Isso substituirá TODOS os dados atuais. Continuar?')) {
-    event.target.value = '';
-    return;
-  }
-  
-  try {
-    const text = await file.text();
-    const dados = JSON.parse(text);
+function buildPixPayload(val, id) {
+    const gui = 'br.gov.bcb.pix';
+    const mai = tlv('00', gui) + tlv('01', config.chave);
+    const ref = 'EMP' + String(id).slice(-8);
+    const add = tlv('05', ref);
     
-    if (!dados.emprestimos || !Array.isArray(dados.emprestimos)) {
-      throw new Error('Arquivo inválido');
-    }
-    
-    atualizarSaveIndicator('saving', '📥 Importando...');
-    
-    // Restaura configurações
-    if (dados.config) {
-      config = dados.config;
-      await Storage.salvarComBackup('configPix', config);
-      document.getElementById('cfgNome').value = config.nome || '';
-      document.getElementById('cfgCidade').value = config.cidade || '';
-      document.getElementById('cfgChave').value = config.chave || '';
-    }
-    
-    // Restaura empréstimos
-    emprestimos = dados.emprestimos;
-    
-    if (usandoFirebase && db) {
-      // Migrar para Firebase
-      if (confirm('Importar também para o Firebase?')) {
-        for (const emp of emprestimos) {
-          const { id, ...dadosEmp } = emp;
-          if (id && id.toString().length === 20) {
-            await db.collection('emprestimos').doc(id).set(dadosEmp);
-          } else {
-            await db.collection('emprestimos').add(dadosEmp);
-          }
-        }
-      }
-    } else {
-      await Storage.salvarComBackup('emprestimos', emprestimos);
-    }
-    
-    renderizar();
-    mostrarToast(`✅ ${emprestimos.length} registros importados!`);
-    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
-    atualizarInfoStorage();
-  } catch (error) {
-    console.error(error);
-    mostrarToast('❌ Erro ao importar arquivo');
-    atualizarSaveIndicator('error', '❌ Erro');
-  }
-  
-  event.target.value = '';
+    let p = '';
+    p += tlv('00', '01');
+    p += tlv('26', mai);
+    p += tlv('52', '0000');
+    p += tlv('53', '986');
+    if(val>0) p += tlv('54', val.toFixed(2));
+    p += tlv('58', 'BR');
+    p += tlv('59', config.nome.substring(0,25));
+    p += tlv('60', config.cidade.substring(0,15));
+    p += tlv('62', add);
+    p += '6304';
+    return p + crc16(p);
 }
 
-async function forcarSalvamento() {
-  atualizarSaveIndicator('saving', '💾 Salvando...');
-  const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
-  await Storage.salvarComBackup('configPix', config);
-  if (firebaseConfig) await Storage.salvarComBackup('firebaseConfig', firebaseConfig);
-  
-  if (sucesso) {
-    mostrarToast(`✅ ${emprestimos.length} registros salvos!`);
-    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
-  } else {
-    mostrarToast('❌ Falha ao salvar!');
-    atualizarSaveIndicator('error', '❌ Falhou');
-  }
-  atualizarInfoStorage();
-}
-
-// ============ PIX ============
-function gerarPix(id) {
-  if (!config.chave) {
-    mostrarToast('⚠️ Configure sua chave Pix primeiro!');
-    return;
-  }
-  const emp = emprestimos.find(e => String(e.id) === String(id));
-  if (!emp) return;
-  
-  emprestimoAtual = emp;
-  const total = emp.valor + calcularJuros(emp);
-  const payload = gerarPayloadPix(total, emp.id);
-  
-  document.getElementById('modalCliente').textContent = `Cliente: ${emp.nome}`;
-  document.getElementById('modalValor').textContent = formatar(total);
-  document.getElementById('pixCode').textContent = payload;
-  
-  const qrDiv = document.getElementById('qrcode');
-  qrDiv.innerHTML = '';
-  new QRCode(qrDiv, { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
-  
-  document.getElementById('modalPix').classList.add('active');
-}
-
-function gerarPayloadPix(valor, id) {
-  const gui = 'br.gov.bcb.pix';
-  const chave = config.chave;
-  const mai = tlv('00', gui) + tlv('01', chave);
-  const ref = 'EMP' + String(id).slice(-8);
-  const addData = tlv('05', ref);
-  
-  let payload = '';
-  payload += tlv('00', '01');
-  payload += tlv('26', mai);
-  payload += tlv('52', '0000');
-  payload += tlv('53', '986');
-  if (valor > 0) payload += tlv('54', valor.toFixed(2));
-  payload += tlv('58', 'BR');
-  payload += tlv('59', config.nome.substring(0, 25));
-  payload += tlv('60', config.cidade.substring(0, 15));
-  payload += tlv('62', addData);
-  
-  payload += '6304';
-  const crc = crc16(payload);
-  payload += crc;
-  
-  return payload;
-}
-
-function tlv(tag, value) {
-  const len = String(value.length).padStart(2, '0');
-  return tag + len + value;
-}
+function tlv(tag, val) { return tag + String(val.length).padStart(2,'0') + val; }
 
 function crc16(str) {
-  let crc = 0xFFFF;
-  for (let i = 0; i < str.length; i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-      crc &= 0xFFFF;
+    let crc = 0xFFFF;
+    for(let i=0; i<str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for(let j=0; j<8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
     }
-  }
-  return crc.toString(16).toUpperCase().padStart(4, '0');
+    return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4,'0');
 }
 
-function copiarPix() {
-  const code = document.getElementById('pixCode').textContent;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(() => mostrarToast('✅ Cop
+function copyPix() {
+    const code = document.getElementById('pixCodeText').textContent;
+    navigator.clipboard.writeText(code).then(()=>toast('📋 Copiado!')).catch(()=>toast('❌ Erro ao copiar'));
+}
+
+function sendWhats() {
+    if(!currentLoan || !currentLoan.tel) return toast('⚠️ Sem telefone cadastrado!');
+    const total = currentLoan.val + getInterest(currentLoan);
+    const code = document.getElementById('pixCodeText').textContent;
+    
+    const msg = `Olá ${currentLoan.nome}! 👋\n\nSeu empréstimo venceu/em breve.\n💰 Valor: ${fmt(total)}\n📅 Venc: ${fmtDate(currentLoan.venc)}\n\n📱 Pix Copia e Cola:\n${code}\n\nQualquer dúvida, estou à disposição!`;
+    window.open(`https://wa.me/55${currentLoan.tel}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function closeModal() { document.getElementById('pixModal').classList.remove('active'); currentLoan=null; }
+
+/** FIREBASE **/
+async function initFirebase() {
+    const key = document.getElementById('fbKey').value.trim();
+    const dom = document.getElementById('fbDomain').value.trim();
+    const proj = document.getElementById('fbProject').value.trim();
+    
+    if(!key || !dom || !proj) return toast('⚠️ Preencha todos os dados!');
+    
+    try {
+        if(!firebase.apps.length) firebase.initializeApp({apiKey:key, authDomain:dom, projectId:proj});
+        db = firebase.firestore();
+        isOnline = true;
+        
+        // Sincronização em tempo real
+        db.collection('loans').onSnapshot(snap => {
+            loans = [];
+            snap.forEach(doc => loans.push({id:doc.id, ...doc.data()}));
+            render();
+        });
+        
+        document.getElementById('dbStatus').innerHTML = '🟢 Online (Firebase)';
+        document.getElementById('dbStatus').style.background = '#4ade80';
+        document.getElementById('dbStatus').style.color = '#000';
+        toast('☁️ Conectado à nuvem!');
+    } catch(e) {
+        console.error(e);
+        toast('❌ Erro conexão Firebase');
+    }
+}
+
+/** PDF **/
+function generatePDF() {
+    if(loans.length===0) return toast('⚠️ Sem dados!');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18); doc.setTextColor(30,60,114); doc.text("Relatório Empréstimos", 14, 20);
+    doc.setFontSize(10); doc.setTextColor(100); doc.text(`Gerado: ${new Date().toLocaleString()}`, 14, 28);
+    
+    const rows = loans.map(l => [
+        l.nome, fmt(l.val), fmt(l.val+getInterest(l)), fmtDate(l.venc), getStatus(l).toUpperCase()
+    ]);
+    
+    doc.autoTable({ startY:35, head:[['Cliente','Valor','Total','Vencimento','Status']], body:rows, theme:'striped', headStyles:{fillColor:[30,60,114]} });
+    doc.save(`relatorio_${Date.now()}.pdf`);
+    toast('📄 PDF Baixado!');
+}
+</script>
+</body>
+</html>
