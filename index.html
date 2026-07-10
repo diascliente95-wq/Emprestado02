@@ -2,66 +2,395 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel de Empréstimo - 30% a.m.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1e3c72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<title>💰 Emprestimos 30%</title>
+
+<!-- Bibliotecas -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-  body { background: linear-gradient(135deg, #1e3c72, #2a5298); min-height: 100vh; padding: 20px; color: #fff; }
-  .container { max-width: 1100px; margin: 0 auto; }
-  h1 { text-align: center; margin-bottom: 20px; font-size: 2em; }
-  .card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-  label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; }
-  input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: #fff; font-size: 1em; }
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html, body {
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  body { 
+    background: linear-gradient(135deg, #1e3c72, #2a5298); 
+    min-height: 100vh; 
+    padding: 15px; 
+    padding-top: calc(15px + env(safe-area-inset-top));
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
+    color: #fff; 
+  }
+  
+  .container { max-width: 1200px; margin: 0 auto; }
+  
+  h1 { 
+    text-align: center; 
+    margin-bottom: 15px; 
+    font-size: 1.5em; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .card { 
+    background: rgba(255,255,255,0.1); 
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px; 
+    padding: 20px; 
+    margin-bottom: 15px; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  h3 { margin-bottom: 15px; font-size: 1.1em; }
+  
+  .grid { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 12px; 
+  }
+  
+  @media (min-width: 600px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  
+  @media (min-width: 900px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  
+  label { 
+    display: block; 
+    margin-bottom: 5px; 
+    font-weight: 600; 
+    font-size: 0.85em; 
+    opacity: 0.9;
+  }
+  
+  input, select { 
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 10px; 
+    border: 1px solid rgba(255,255,255,0.3); 
+    background: rgba(255,255,255,0.15); 
+    color: #fff; 
+    font-size: 1em;
+    transition: all 0.2s;
+  }
+  
   input::placeholder { color: rgba(255,255,255,0.6); }
-  input:focus { outline: 2px solid #4ade80; }
-  button { background: linear-gradient(135deg, #4ade80, #22c55e); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; transition: transform 0.2s; }
-  button:hover { transform: translateY(-2px); }
+  
+  input:focus { 
+    outline: none;
+    border-color: #4ade80;
+    background: rgba(255,255,255,0.2);
+  }
+  
+  button { 
+    background: linear-gradient(135deg, #4ade80, #22c55e); 
+    color: #fff; 
+    border: none; 
+    padding: 14px 20px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 0.95em; 
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    min-height: 44px;
+    width: 100%;
+  }
+  
+  button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+  button:active { transform: translateY(0); }
+  
   button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
   button.secondary { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-  th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.15); }
-  th { background: rgba(0,0,0,0.2); font-size: 0.9em; }
+  button.whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
+  button.pdf { background: linear-gradient(135deg, #dc2626, #991b1b); }
+  
+  .btn-row { 
+    display: flex; 
+    gap: 10px; 
+    margin-top: 15px; 
+    flex-wrap: wrap;
+  }
+  
+  .btn-row button { flex: 1; min-width: 120px; }
+  
+  .table-wrapper { 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch;
+    margin-top: 10px;
+  }
+  
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  
+  th, td { 
+    padding: 10px; 
+    text-align: left; 
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.85em;
+  }
+  
+  th { background: rgba(0,0,0,0.2); font-size: 0.8em; white-space: nowrap; }
   tr:hover { background: rgba(255,255,255,0.05); }
-  .status { padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+  
+  .status { 
+    padding: 4px 10px; 
+    border-radius: 20px; 
+    font-size: 0.75em; 
+    font-weight: 600;
+    display: inline-block;
+  }
   .status.pendente { background: #fbbf24; color: #000; }
   .status.pago { background: #4ade80; color: #000; }
   .status.atrasado { background: #ef4444; color: #fff; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-  .stat-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; text-align: center; }
-  .stat-box .valor { font-size: 1.8em; font-weight: bold; color: #4ade80; }
-  .stat-box .label { font-size: 0.85em; opacity: 0.8; }
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+  
+  .stats { 
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px; 
+    margin-bottom: 15px; 
+  }
+  
+  @media (min-width: 600px) {
+    .stats { grid-template-columns: repeat(4, 1fr); }
+  }
+  
+  .stat-box { 
+    background: rgba(255,255,255,0.1); 
+    padding: 15px 10px; 
+    border-radius: 12px; 
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .stat-box .valor { 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    color: #4ade80;
+    word-break: break-word;
+  }
+  
+  .stat-box .label { font-size: 0.75em; opacity: 0.8; margin-top: 5px; }
+  
+  .modal { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.85); 
+    z-index: 1000; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
   .modal.active { display: flex; }
-  .modal-content { background: #1e3c72; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%; text-align: center; }
-  #qrcode { background: #fff; padding: 15px; border-radius: 10px; display: inline-block; margin: 15px 0; }
-  .pix-code { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8em; word-break: break-all; margin: 10px 0; max-height: 100px; overflow-y: auto; }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .actions button { padding: 6px 12px; font-size: 0.85em; }
+  
+  .modal-content { 
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    padding: 25px; 
+    border-radius: 15px; 
+    max-width: 500px; 
+    width: 100%; 
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin: auto;
+  }
+  
+  #qrcode { 
+    background: #fff; 
+    padding: 15px; 
+    border-radius: 10px; 
+    display: inline-block; 
+    margin: 15px 0;
+  }
+  
+  #qrcode img { display: block; max-width: 100%; height: auto; }
+  
+  .pix-code { 
+    background: rgba(0,0,0,0.3); 
+    padding: 10px; 
+    border-radius: 8px; 
+    font-family: monospace; 
+    font-size: 0.75em; 
+    word-break: break-all; 
+    margin: 10px 0; 
+    max-height: 100px; 
+    overflow-y: auto;
+    text-align: left;
+  }
+  
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .actions button { padding: 8px 12px; font-size: 0.8em; min-height: 36px; width: auto; }
+  
+  .db-status { 
+    display: inline-block; 
+    padding: 6px 12px; 
+    border-radius: 20px; 
+    font-size: 0.8em; 
+    font-weight: 600;
+  }
+  .db-status.online { background: #4ade80; color: #000; }
+  .db-status.offline { background: #fbbf24; color: #000; }
+  
+  .tab-buttons { display: flex; gap: 8px; margin-bottom: 15px; }
+  .tab-buttons button { flex: 1; padding: 10px; }
+  .tab-buttons button.active { 
+    background: linear-gradient(135deg, #fbbf24, #f59e0b); 
+    color: #000;
+  }
+  
+  .preview { 
+    margin-top: 15px; 
+    padding: 12px; 
+    background: rgba(0,0,0,0.2); 
+    border-radius: 10px; 
+    display: none;
+    font-size: 0.9em;
+    line-height: 1.6;
+  }
+  
+  .info-text { 
+    font-size: 0.85em; 
+    opacity: 0.9; 
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+  
+  .info-text a { color: #4ade80; text-decoration: underline; }
+  
+  .fab {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: #fff;
+    font-size: 1.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    z-index: 100;
+    border: none;
+    cursor: pointer;
+  }
+  
+  @media (min-width: 768px) {
+    .fab { display: none; }
+  }
+  
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.9);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 25px;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    font-size: 0.9em;
+  }
+  
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>💰 Painel de Empréstimo - 30% a.m.</h1>
+  <h1>💰 Emprestimos 30% a.m.</h1>
+
+  <!-- Status do Banco de Dados -->
+  <div style="text-align:center; margin-bottom:15px;">
+    <span class="db-status" id="dbStatus">⏳ Verificando...</span>
+  </div>
 
   <!-- Configuração -->
   <div class="card">
-    <h3 style="margin-bottom:15px;">⚙️ Configurações do Pix</h3>
-    <div class="grid">
-      <div>
-        <label>Nome do beneficiário</label>
-        <input type="text" id="cfgNome" placeholder="SEU NOME">
+    <h3>⚙️ Configurações</h3>
+    
+    <div class="tab-buttons">
+      <button onclick="mostrarTab('pix')" id="btnTabPix" class="active">💳 Pix</button>
+      <button onclick="mostrarTab('firebase')" id="btnTabFirebase">🗄️ Banco</button>
+    </div>
+
+    <!-- Tab Pix -->
+    <div id="tabPix">
+      <div class="grid">
+        <div>
+          <label>Nome do beneficiário</label>
+          <input type="text" id="cfgNome" placeholder="SEU NOME" autocomplete="off">
+        </div>
+        <div>
+          <label>Cidade</label>
+          <input type="text" id="cfgCidade" placeholder="SAO PAULO" maxlength="15" autocomplete="off">
+        </div>
+        <div>
+          <label>Chave Pix</label>
+          <input type="text" id="cfgChave" placeholder="CPF, e-mail, telefone ou chave" autocomplete="off">
+        </div>
       </div>
-      <div>
-        <label>Cidade</label>
-        <input type="text" id="cfgCidade" placeholder="SAO PAULO" maxlength="15">
+      <button onclick="salvarConfig()" style="margin-top:15px;">💾 Salvar Configurações Pix</button>
+    </div>
+
+    <!-- Tab Firebase -->
+    <div id="tabFirebase" style="display:none;">
+      <p class="info-text">
+        Configure o Firebase para salvar dados online (acessível de qualquer dispositivo).
+        <a href="https://console.firebase.google.com/" target="_blank">Criar projeto gratuito</a>
+      </p>
+      <div class="grid">
+        <div>
+          <label>API Key</label>
+          <input type="text" id="fbApiKey" placeholder="AIza..." autocomplete="off">
+        </div>
+        <div>
+          <label>Auth Domain</label>
+          <input type="text" id="fbAuthDomain" placeholder="seu-projeto.firebaseapp.com" autocomplete="off">
+        </div>
+        <div>
+          <label>Project ID</label>
+          <input type="text" id="fbProjectId" placeholder="seu-projeto" autocomplete="off">
+        </div>
       </div>
-      <div>
-        <label>Chave Pix</label>
-        <input type="text" id="cfgChave" placeholder="CPF, e-mail, telefone ou chave aleatória">
+      <div class="btn-row">
+        <button onclick="salvarFirebase()">💾 Conectar Firebase</button>
+        <button onclick="migrarParaFirebase()" class="secondary">🔄 Migrar dados locais</button>
       </div>
     </div>
-    <button onclick="salvarConfig()" style="margin-top:15px;">💾 Salvar Configurações</button>
   </div>
 
   <!-- Estatísticas -->
@@ -72,7 +401,7 @@
     </div>
     <div class="stat-box">
       <div class="valor" id="statPendente">R$ 0,00</div>
-      <div class="label">A Receber (com juros)</div>
+      <div class="label">A Receber</div>
     </div>
     <div class="stat-box">
       <div class="valor" id="statRecebido">R$ 0,00</div>
@@ -80,50 +409,61 @@
     </div>
     <div class="stat-box">
       <div class="valor" id="statQtd">0</div>
-      <div class="label">Empréstimos Ativos</div>
+      <div class="label">Ativos</div>
     </div>
   </div>
 
   <!-- Formulário -->
   <div class="card">
-    <h3 style="margin-bottom:15px;">📝 Novo Empréstimo</h3>
+    <h3>📝 Novo Empréstimo</h3>
     <div class="grid">
       <div>
-        <label>Nome do cliente</label>
-        <input type="text" id="inpNome" placeholder="Nome completo">
+        <label>Nome do cliente *</label>
+        <input type="text" id="inpNome" placeholder="Nome completo" autocomplete="off">
       </div>
       <div>
-        <label>Valor emprestado (R$)</label>
-        <input type="number" id="inpValor" step="0.01" min="0" placeholder="0,00">
+        <label>Telefone (WhatsApp)</label>
+        <input type="tel" id="inpTelefone" placeholder="11999998888" autocomplete="off">
       </div>
       <div>
-        <label>Data/Hora do empréstimo</label>
+        <label>Valor emprestado (R$) *</label>
+        <input type="number" id="inpValor" step="0.01" min="0" placeholder="0,00" inputmode="decimal">
+      </div>
+      <div>
+        <label>Data/Hora do empréstimo *</label>
         <input type="datetime-local" id="inpData">
       </div>
       <div>
-        <label>Vencimento</label>
+        <label>Vencimento *</label>
         <input type="datetime-local" id="inpVencimento">
       </div>
     </div>
-    <div id="preview" style="margin-top:15px; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; display:none;">
-      <strong>Prévia:</strong> Valor emprestado: <span id="prevEmp">R$ 0,00</span> | 
-      Juros (30% a.m.): <span id="prevJuros">R$ 0,00</span> | 
-      Total a receber: <span id="prevTotal" style="color:#4ade80; font-weight:bold;">R$ 0,00</span>
+    
+    <div class="preview" id="preview">
+      <strong>Prévia:</strong><br>
+      💵 Valor: <span id="prevEmp">R$ 0,00</span><br>
+      📈 Juros (30% a.m.): <span id="prevJuros">R$ 0,00</span><br>
+      💰 Total a receber: <span id="prevTotal" style="color:#4ade80; font-weight:bold;">R$ 0,00</span>
     </div>
-    <button onclick="adicionarEmprestimo()" style="margin-top:15px;">➕ Registrar Empréstimo</button>
+    
+    <div class="btn-row">
+      <button onclick="adicionarEmprestimo()">➕ Registrar</button>
+      <button onclick="gerarRelatorio()" class="pdf">📄 Relatório PDF</button>
+    </div>
   </div>
 
   <!-- Lista -->
   <div class="card">
-    <h3 style="margin-bottom:15px;">📋 Empréstimos Registrados</h3>
-    <div style="overflow-x:auto;">
+    <h3>📋 Empréstimos</h3>
+    <div class="table-wrapper">
       <table>
         <thead>
           <tr>
             <th>Cliente</th>
+            <th>Telefone</th>
             <th>Valor</th>
             <th>Total c/ Juros</th>
-            <th>Data/Hora</th>
+            <th>Data</th>
             <th>Vencimento</th>
             <th>Status</th>
             <th>Ações</th>
@@ -143,37 +483,65 @@
     <p><strong>Valor: <span id="modalValor" style="color:#4ade80;"></span></strong></p>
     <div id="qrcode"></div>
     <div class="pix-code" id="pixCode"></div>
-    <button class="secondary" onclick="copiarPix()">📋 Copiar Código Pix</button>
-    <button class="danger" onclick="fecharModal()" style="margin-left:10px;">✖ Fechar</button>
+    <div class="btn-row">
+      <button class="secondary" onclick="copiarPix()">📋 Copiar</button>
+      <button class="whatsapp" onclick="enviarWhatsApp()">📱 WhatsApp</button>
+    </div>
+    <button class="danger" onclick="fecharModal()" style="margin-top:10px;">✖ Fechar</button>
   </div>
 </div>
 
-<script>
-let emprestimos = JSON.parse(localStorage.getItem('emprestimos') || '[]');
-let config = JSON.parse(localStorage.getItem('configPix') || '{}');
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-// Inicializa configurações
-window.onload = () => {
+<script>
+// ============ VARIÁVEIS GLOBAIS ============
+let emprestimos = [];
+let config = JSON.parse(localStorage.getItem('configPix') || '{}');
+let firebaseConfig = JSON.parse(localStorage.getItem('firebaseConfig') || 'null');
+let db = null;
+let usandoFirebase = false;
+let emprestimoAtual = null;
+
+// ============ INICIALIZAÇÃO ============
+window.addEventListener('load', async () => {
+  // Carrega configurações Pix
   if (config.nome) document.getElementById('cfgNome').value = config.nome;
   if (config.cidade) document.getElementById('cfgCidade').value = config.cidade;
   if (config.chave) document.getElementById('cfgChave').value = config.chave;
   
-  // Data/hora atual
+  // Conecta Firebase se configurado
+  if (firebaseConfig) {
+    document.getElementById('fbApiKey').value = firebaseConfig.apiKey;
+    document.getElementById('fbAuthDomain').value = firebaseConfig.authDomain;
+    document.getElementById('fbProjectId').value = firebaseConfig.projectId;
+    await conectarFirebase();
+  } else {
+    emprestimos = JSON.parse(localStorage.getItem('emprestimos') || '[]');
+    atualizarStatusDB();
+  }
+  
+  // Define datas padrão
   const agora = new Date();
   const local = new Date(agora.getTime() - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
   document.getElementById('inpData').value = local;
   
-  // Vencimento padrão: 30 dias
   const venc = new Date(agora.getTime() + 30*24*60*60*1000 - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
   document.getElementById('inpVencimento').value = venc;
   
+  // Preview em tempo real
+  document.getElementById('inpValor').addEventListener('input', atualizarPreview);
+  
   renderizar();
-};
-
-// Preview em tempo real
-['inpValor'].forEach(id => {
-  document.getElementById(id).addEventListener('input', atualizarPreview);
 });
+
+// ============ FUNÇÕES DE INTERFACE ============
+function mostrarToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
 
 function atualizarPreview() {
   const valor = parseFloat(document.getElementById('inpValor').value) || 0;
@@ -185,52 +553,173 @@ function atualizarPreview() {
   document.getElementById('prevTotal').textContent = formatar(total);
 }
 
+function mostrarTab(tab) {
+  document.getElementById('tabPix').style.display = tab === 'pix' ? 'block' : 'none';
+  document.getElementById('tabFirebase').style.display = tab === 'firebase' ? 'block' : 'none';
+  document.getElementById('btnTabPix').classList.toggle('active', tab === 'pix');
+  document.getElementById('btnTabFirebase').classList.toggle('active', tab === 'firebase');
+}
+
+function atualizarStatusDB() {
+  const status = document.getElementById('dbStatus');
+  if (usandoFirebase) {
+    status.textContent = '🟢 Online (Firebase)';
+    status.className = 'db-status online';
+  } else {
+    status.textContent = '🟡 Offline (Local)';
+    status.className = 'db-status offline';
+  }
+}
+
+// ============ CONFIGURAÇÕES ============
 function salvarConfig() {
   config = {
-    nome: document.getElementById('cfgNome').value.toUpperCase(),
-    cidade: document.getElementById('cfgCidade').value.toUpperCase(),
+    nome: document.getElementById('cfgNome').value.toUpperCase().trim(),
+    cidade: document.getElementById('cfgCidade').value.toUpperCase().trim(),
     chave: document.getElementById('cfgChave').value.trim()
   };
   if (!config.nome || !config.cidade || !config.chave) {
-    alert('Preencha todos os campos!');
+    mostrarToast('⚠️ Preencha todos os campos!');
     return;
   }
   localStorage.setItem('configPix', JSON.stringify(config));
-  alert('✅ Configurações salvas!');
+  mostrarToast('✅ Configurações salvas!');
 }
 
-function adicionarEmprestimo() {
+async function salvarFirebase() {
+  const apiKey = document.getElementById('fbApiKey').value.trim();
+  const authDomain = document.getElementById('fbAuthDomain').value.trim();
+  const projectId = document.getElementById('fbProjectId').value.trim();
+  
+  if (!apiKey || !authDomain || !projectId) {
+    mostrarToast('⚠️ Preencha todos os campos!');
+    return;
+  }
+  
+  firebaseConfig = { apiKey, authDomain, projectId };
+  localStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
+  
+  await conectarFirebase();
+}
+
+async function conectarFirebase() {
+  try {
+    if (typeof firebase === 'undefined') {
+      throw new Error('Firebase não carregado');
+    }
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    db = firebase.firestore();
+    
+    // Testa conexão
+    await db.collection('emprestimos').limit(1).get();
+    
+    usandoFirebase = true;
+    
+    // Listener em tempo real
+    db.collection('emprestimos').onSnapshot(() => {
+      carregarDados();
+    });
+    
+    atualizarStatusDB();
+    mostrarToast('✅ Firebase conectado!');
+  } catch (error) {
+    console.error('Erro Firebase:', error);
+    mostrarToast('❌ Erro ao conectar Firebase');
+    usandoFirebase = false;
+    emprestimos = JSON.parse(localStorage.getItem('emprestimos') || '[]');
+    atualizarStatusDB();
+  }
+}
+
+async function carregarDados() {
+  if (usandoFirebase && db) {
+    const snapshot = await db.collection('emprestimos').get();
+    emprestimos = [];
+    snapshot.forEach(doc => {
+      emprestimos.push({ id: doc.id, ...doc.data() });
+    });
+    renderizar();
+  }
+}
+
+async function migrarParaFirebase() {
+  if (!usandoFirebase) {
+    mostrarToast('⚠️ Configure o Firebase primeiro!');
+    return;
+  }
+  
+  const locais = JSON.parse(localStorage.getItem('emprestimos') || '[]');
+  if (locais.length === 0) {
+    mostrarToast('Sem dados locais para migrar');
+    return;
+  }
+  
+  if (!confirm(`Migrar ${locais.length} empréstimos para o Firebase?`)) return;
+  
+  try {
+    for (const emp of locais) {
+      const { id, ...dados } = emp;
+      await db.collection('emprestimos').add(dados);
+    }
+    mostrarToast('✅ Dados migrados!');
+    localStorage.removeItem('emprestimos');
+    await carregarDados();
+  } catch (error) {
+    console.error(error);
+    mostrarToast('❌ Erro ao migrar');
+  }
+}
+
+// ============ EMPRÉSTIMOS ============
+async function adicionarEmprestimo() {
   const nome = document.getElementById('inpNome').value.trim();
+  const telefone = document.getElementById('inpTelefone').value.trim().replace(/\D/g, '');
   const valor = parseFloat(document.getElementById('inpValor').value);
   const data = document.getElementById('inpData').value;
   const vencimento = document.getElementById('inpVencimento').value;
   
   if (!nome || !valor || !data || !vencimento) {
-    alert('Preencha todos os campos!');
+    mostrarToast('⚠️ Preencha os campos obrigatórios!');
     return;
   }
   
-  emprestimos.push({
-    id: Date.now(),
-    nome, valor, data, vencimento,
+  const novoEmp = {
+    nome, telefone, valor, data, vencimento,
     status: 'pendente',
     criadoEm: new Date().toISOString()
-  });
+  };
   
-  localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
-  document.getElementById('inpNome').value = '';
-  document.getElementById('inpValor').value = '';
-  renderizar();
+  try {
+    if (usandoFirebase && db) {
+      await db.collection('emprestimos').add(novoEmp);
+    } else {
+      novoEmp.id = Date.now();
+      emprestimos.push(novoEmp);
+      localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+    }
+    
+    // Limpa formulário
+    document.getElementById('inpNome').value = '';
+    document.getElementById('inpTelefone').value = '';
+    document.getElementById('inpValor').value = '';
+    document.getElementById('preview').style.display = 'none';
+    
+    renderizar();
+    mostrarToast('✅ Empréstimo registrado!');
+  } catch (error) {
+    console.error(error);
+    mostrarToast('❌ Erro ao registrar');
+  }
 }
 
 function calcularJuros(emp) {
-  // Juros de 30% ao mês, proporcional ao tempo
   const inicio = new Date(emp.data);
   const fim = new Date(emp.vencimento);
   const dias = (fim - inicio) / (1000*60*60*24);
   const meses = dias / 30;
-  const juros = emp.valor * 0.30 * meses;
-  return juros;
+  return emp.valor * 0.30 * meses;
 }
 
 function calcularStatus(emp) {
@@ -258,6 +747,7 @@ function renderizar() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${emp.nome}</td>
+      <td>${emp.telefone || '-'}</td>
       <td>${formatar(emp.valor)}</td>
       <td><strong>${formatar(total)}</strong></td>
       <td>${formatarData(emp.data)}</td>
@@ -265,9 +755,9 @@ function renderizar() {
       <td><span class="status ${status}">${status.toUpperCase()}</span></td>
       <td>
         <div class="actions">
-          <button onclick="gerarPix(${emp.id})">📱 Pix</button>
-          ${status !== 'pago' ? `<button class="secondary" onclick="marcarPago(${emp.id})">✓ Pago</button>` : ''}
-          <button class="danger" onclick="excluir(${emp.id})">🗑</button>
+          <button onclick="gerarPix('${emp.id}')">📱</button>
+          ${status !== 'pago' ? `<button class="secondary" onclick="marcarPago('${emp.id}')">✓</button>` : ''}
+          <button class="danger" onclick="excluir('${emp.id}')">🗑</button>
         </div>
       </td>
     `;
@@ -280,32 +770,62 @@ function renderizar() {
   document.getElementById('statQtd').textContent = ativos;
 }
 
-function marcarPago(id) {
+async function marcarPago(id) {
   if (!confirm('Confirmar pagamento recebido?')) return;
-  const emp = emprestimos.find(e => e.id === id);
-  emp.status = 'pago';
-  emp.pagoEm = new Date().toISOString();
-  localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
-  renderizar();
+  
+  try {
+    if (usandoFirebase && db) {
+      await db.collection('emprestimos').doc(id).update({
+        status: 'pago',
+        pagoEm: new Date().toISOString()
+      });
+    } else {
+      const emp = emprestimos.find(e => String(e.id) === String(id));
+      if (emp) {
+        emp.status = 'pago';
+        emp.pagoEm = new Date().toISOString();
+        localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+      }
+    }
+    renderizar();
+    mostrarToast('✅ Pagamento confirmado!');
+  } catch (error) {
+    console.error(error);
+    mostrarToast('❌ Erro ao confirmar');
+  }
 }
 
-function excluir(id) {
+async function excluir(id) {
   if (!confirm('Excluir este empréstimo?')) return;
-  emprestimos = emprestimos.filter(e => e.id !== id);
-  localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
-  renderizar();
+  
+  try {
+    if (usandoFirebase && db) {
+      await db.collection('emprestimos').doc(id).delete();
+    } else {
+      emprestimos = emprestimos.filter(e => String(e.id) !== String(id));
+      localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+    }
+    renderizar();
+    mostrarToast('🗑️ Empréstimo excluído');
+  } catch (error) {
+    console.error(error);
+    mostrarToast('❌ Erro ao excluir');
+  }
 }
 
-// ============ GERAÇÃO PIX (Padrão BR Code EMV) ============
+// ============ PIX ============
 function gerarPix(id) {
   if (!config.chave) {
-    alert('Configure sua chave Pix primeiro!');
+    mostrarToast('⚠️ Configure sua chave Pix primeiro!');
     return;
   }
-  const emp = emprestimos.find(e => e.id === id);
+  const emp = emprestimos.find(e => String(e.id) === String(id));
+  if (!emp) return;
+  
+  emprestimoAtual = emp;
   const total = emp.valor + calcularJuros(emp);
   
-  const payload = gerarPayloadPix(total, emp.nome, emp.id);
+  const payload = gerarPayloadPix(total, emp.id);
   
   document.getElementById('modalCliente').textContent = `Cliente: ${emp.nome}`;
   document.getElementById('modalValor').textContent = formatar(total);
@@ -313,35 +833,34 @@ function gerarPix(id) {
   
   const qrDiv = document.getElementById('qrcode');
   qrDiv.innerHTML = '';
-  new QRCode(qrDiv, { text: payload, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M });
+  new QRCode(qrDiv, { 
+    text: payload, 
+    width: 220, 
+    height: 220, 
+    correctLevel: QRCode.CorrectLevel.M 
+  });
   
   document.getElementById('modalPix').classList.add('active');
 }
 
-function gerarPayloadPix(valor, clienteRef, id) {
-  // Monta o payload BR Code seguindo o padrão EMV do BACEN
+function gerarPayloadPix(valor, id) {
   const gui = 'br.gov.bcb.pix';
   const chave = config.chave;
-  
-  // Merchant Account Information (tag 26)
   const mai = tlv('00', gui) + tlv('01', chave);
-  
-  // Additional Data (tag 62) - reference label
-  const ref = 'EMP' + id.toString().slice(-8);
+  const ref = 'EMP' + String(id).slice(-8);
   const addData = tlv('05', ref);
   
   let payload = '';
-  payload += tlv('00', '01');              // Payload Format
-  payload += tlv('26', mai);               // Merchant Account
-  payload += tlv('52', '0000');            // MCC
-  payload += tlv('53', '986');             // BRL
-  if (valor > 0) payload += tlv('54', valor.toFixed(2)); // Valor
-  payload += tlv('58', 'BR');              // País
-  payload += tlv('59', config.nome);       // Nome
-  payload += tlv('60', config.cidade);     // Cidade
-  payload += tlv('62', addData);           // Dados adicionais
+  payload += tlv('00', '01');
+  payload += tlv('26', mai);
+  payload += tlv('52', '0000');
+  payload += tlv('53', '986');
+  if (valor > 0) payload += tlv('54', valor.toFixed(2));
+  payload += tlv('58', 'BR');
+  payload += tlv('59', config.nome.substring(0, 25));
+  payload += tlv('60', config.cidade.substring(0, 15));
+  payload += tlv('62', addData);
   
-  // CRC16 - calculado sobre todo o payload + tag 63 com valor 04
   payload += '6304';
   const crc = crc16(payload);
   payload += crc;
@@ -349,13 +868,11 @@ function gerarPayloadPix(valor, clienteRef, id) {
   return payload;
 }
 
-// TLV: Tag-Length-Value
 function tlv(tag, value) {
-  const len = value.length.toString().padStart(2, '0');
+  const len = String(value.length).padStart(2, '0');
   return tag + len + value;
 }
 
-// CRC16 padrão do Pix (CCITT-FALSE)
 function crc16(str) {
   let crc = 0xFFFF;
   for (let i = 0; i < str.length; i++) {
@@ -370,23 +887,162 @@ function crc16(str) {
 
 function copiarPix() {
   const code = document.getElementById('pixCode').textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    alert('✅ Código Pix copiado!');
-  });
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => {
+      mostrarToast('✅ Código Pix copiado!');
+    }).catch(() => {
+      fallbackCopiar(code);
+    });
+  } else {
+    fallbackCopiar(code);
+  }
+}
+
+function fallbackCopiar(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    mostrarToast('✅ Código Pix copiado!');
+  } catch (e) {
+    mostrarToast('❌ Erro ao copiar');
+  }
+  document.body.removeChild(ta);
+}
+
+function enviarWhatsApp() {
+  if (!emprestimoAtual) return;
+  if (!emprestimoAtual.telefone) {
+    mostrarToast('⚠️ Telefone não cadastrado!');
+    return;
+  }
+  
+  const total = emprestimoAtual.valor + calcularJuros(emprestimoAtual);
+  const pixCode = document.getElementById('pixCode').textContent;
+  
+  let mensagem = `Olá ${emprestimoAtual.nome}! 👋\n\n`;
+  mensagem += `Segue o Pix para pagamento do empréstimo:\n\n`;
+  mensagem += `💰 Valor: ${formatar(total)}\n`;
+  mensagem += `📅 Vencimento: ${formatarData(emprestimoAtual.vencimento)}\n\n`;
+  mensagem += `📱 Código Pix Copia e Cola:\n${pixCode}\n\n`;
+  mensagem += `Qualquer dúvida, estou à disposição!`;
+  
+  const telefone = emprestimoAtual.telefone.replace(/\D/g, '');
+  const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, '_blank');
 }
 
 function fecharModal() {
   document.getElementById('modalPix').classList.remove('active');
+  emprestimoAtual = null;
 }
 
+// ============ RELATÓRIO PDF ============
+function gerarRelatorio() {
+  if (emprestimos.length === 0) {
+    mostrarToast('⚠️ Nenhum empréstimo para gerar relatório');
+    return;
+  }
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(18);
+    doc.setTextColor(30, 60, 114);
+    doc.text('Relatório de Empréstimos', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+    
+    // Estatísticas
+    let totalEmp = 0, totalReceber = 0, totalRecebido = 0;
+    emprestimos.forEach(emp => {
+      const juros = calcularJuros(emp);
+      const total = emp.valor + juros;
+      totalEmp += emp.valor;
+      if (calcularStatus(emp) === 'pago') totalRecebido += total;
+      else totalReceber += total;
+    });
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    doc.text(`Total Emprestado: ${formatar(totalEmp)}`, 14, 40);
+    doc.text(`A Receber: ${formatar(totalReceber)}`, 14, 48);
+    doc.text(`Já Recebido: ${formatar(totalRecebido)}`, 14, 56);
+    doc.text(`Total de registros: ${emprestimos.length}`, 14, 64);
+    
+    // Tabela
+    const tableData = emprestimos.map(emp => {
+      const juros = calcularJuros(emp);
+      const total = emp.valor + juros;
+      return [
+        emp.nome,
+        emp.telefone || '-',
+        formatar(emp.valor),
+        formatar(total),
+        formatarData(emp.data),
+        formatarData(emp.vencimento),
+        calcularStatus(emp).toUpperCase()
+      ];
+    });
+    
+    doc.autoTable({
+      startY: 72,
+      head: [['Cliente', 'Tel', 'Valor', 'Total', 'Data', 'Venc.', 'Status']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillColor: [30, 60, 114], fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 28 },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 18 }
+      }
+    });
+    
+    doc.save(`relatorio-${Date.now()}.pdf`);
+    mostrarToast('✅ PDF gerado!');
+  } catch (error) {
+    console.error(error);
+    mostrarToast('❌ Erro ao gerar PDF');
+  }
+}
+
+// ============ UTILITÁRIOS ============
 function formatar(v) {
-  return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return 'R$ ' + Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 function formatarData(d) {
+  if (!d) return '-';
   const dt = new Date(d);
-  return dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  if (isNaN(dt.getTime())) return '-';
+  return dt.toLocaleString('pt-BR', { 
+    day:'2-digit', month:'2-digit', year:'numeric', 
+    hour:'2-digit', minute:'2-digit' 
+  });
 }
+
+// Previne zoom em double-tap (mobile)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
 </script>
 </body>
 </html>
