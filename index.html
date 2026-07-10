@@ -11,7 +11,6 @@
 <link rel="manifest" href="manifest.json">
 <title>💰 Emprestimos 30%</title>
 
-<!-- Bibliotecas -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -19,323 +18,81 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
 <style>
-  * { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  html, body {
-    overscroll-behavior: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  
-  input, textarea {
-    -webkit-user-select: text;
-    user-select: text;
-  }
-  
-  body { 
-    background: linear-gradient(135deg, #1e3c72, #2a5298); 
-    min-height: 100vh; 
-    padding: 15px; 
-    padding-top: calc(15px + env(safe-area-inset-top));
-    padding-bottom: calc(15px + env(safe-area-inset-bottom));
-    color: #fff; 
-  }
-  
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  html, body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+  input, textarea { -webkit-user-select: text; user-select: text; }
+  body { background: linear-gradient(135deg, #1e3c72, #2a5298); min-height: 100vh; padding: 15px; padding-top: calc(15px + env(safe-area-inset-top)); padding-bottom: calc(15px + env(safe-area-inset-bottom)); color: #fff; }
   .container { max-width: 1200px; margin: 0 auto; }
-  
-  h1 { 
-    text-align: center; 
-    margin-bottom: 15px; 
-    font-size: 1.5em; 
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-  
-  .card { 
-    background: rgba(255,255,255,0.1); 
-    backdrop-filter: blur(10px); 
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 15px; 
-    padding: 20px; 
-    margin-bottom: 15px; 
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-  
+  h1 { text-align: center; margin-bottom: 15px; font-size: 1.5em; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+  .card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); }
   h3 { margin-bottom: 15px; font-size: 1.1em; }
-  
-  .grid { 
-    display: grid; 
-    grid-template-columns: 1fr; 
-    gap: 12px; 
-  }
-  
-  @media (min-width: 600px) {
-    .grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  
-  @media (min-width: 900px) {
-    .grid { grid-template-columns: repeat(3, 1fr); }
-  }
-  
-  label { 
-    display: block; 
-    margin-bottom: 5px; 
-    font-weight: 600; 
-    font-size: 0.85em; 
-    opacity: 0.9;
-  }
-  
-  input, select { 
-    width: 100%; 
-    padding: 12px; 
-    border-radius: 10px; 
-    border: 1px solid rgba(255,255,255,0.3); 
-    background: rgba(255,255,255,0.15); 
-    color: #fff; 
-    font-size: 1em;
-    transition: all 0.2s;
-  }
-  
+  .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85em; opacity: 0.9; }
+  input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: #fff; font-size: 1em; transition: all 0.2s; }
   input::placeholder { color: rgba(255,255,255,0.6); }
-  
-  input:focus { 
-    outline: none;
-    border-color: #4ade80;
-    background: rgba(255,255,255,0.2);
-  }
-  
-  button { 
-    background: linear-gradient(135deg, #4ade80, #22c55e); 
-    color: #fff; 
-    border: none; 
-    padding: 14px 20px; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    font-weight: 600; 
-    font-size: 0.95em; 
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    min-height: 44px;
-    width: 100%;
-  }
-  
-  button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+  input:focus { outline: none; border-color: #4ade80; background: rgba(255,255,255,0.2); }
+  button { background: linear-gradient(135deg, #4ade80, #22c55e); color: #fff; border: none; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.95em; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); min-height: 44px; width: 100%; }
+  button:hover { transform: translateY(-2px); }
   button:active { transform: translateY(0); }
-  
   button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
   button.secondary { background: linear-gradient(135deg, #6366f1, #4f46e5); }
   button.whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
   button.pdf { background: linear-gradient(135deg, #dc2626, #991b1b); }
-  
-  .btn-row { 
-    display: flex; 
-    gap: 10px; 
-    margin-top: 15px; 
-    flex-wrap: wrap;
-  }
-  
+  button.backup { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .btn-row { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
   .btn-row button { flex: 1; min-width: 120px; }
-  
-  .table-wrapper { 
-    overflow-x: auto; 
-    -webkit-overflow-scrolling: touch;
-    margin-top: 10px;
-  }
-  
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
   table { width: 100%; border-collapse: collapse; min-width: 700px; }
-  
-  th, td { 
-    padding: 10px; 
-    text-align: left; 
-    border-bottom: 1px solid rgba(255,255,255,0.15);
-    font-size: 0.85em;
-  }
-  
+  th, td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.15); font-size: 0.85em; }
   th { background: rgba(0,0,0,0.2); font-size: 0.8em; white-space: nowrap; }
   tr:hover { background: rgba(255,255,255,0.05); }
-  
-  .status { 
-    padding: 4px 10px; 
-    border-radius: 20px; 
-    font-size: 0.75em; 
-    font-weight: 600;
-    display: inline-block;
-  }
+  .status { padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; display: inline-block; }
   .status.pendente { background: #fbbf24; color: #000; }
   .status.pago { background: #4ade80; color: #000; }
   .status.atrasado { background: #ef4444; color: #fff; }
-  
-  .stats { 
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 10px; 
-    margin-bottom: 15px; 
-  }
-  
-  @media (min-width: 600px) {
-    .stats { grid-template-columns: repeat(4, 1fr); }
-  }
-  
-  .stat-box { 
-    background: rgba(255,255,255,0.1); 
-    padding: 15px 10px; 
-    border-radius: 12px; 
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-  
-  .stat-box .valor { 
-    font-size: 1.2em; 
-    font-weight: bold; 
-    color: #4ade80;
-    word-break: break-word;
-  }
-  
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+  @media (min-width: 600px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat-box { background: rgba(255,255,255,0.1); padding: 15px 10px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+  .stat-box .valor { font-size: 1.2em; font-weight: bold; color: #4ade80; word-break: break-word; }
   .stat-box .label { font-size: 0.75em; opacity: 0.8; margin-top: 5px; }
-  
-  .modal { 
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.85); 
-    z-index: 1000; 
-    justify-content: center; 
-    align-items: center; 
-    padding: 20px;
-    overflow-y: auto;
-  }
-  
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
   .modal.active { display: flex; }
-  
-  .modal-content { 
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    padding: 25px; 
-    border-radius: 15px; 
-    max-width: 500px; 
-    width: 100%; 
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.2);
-    margin: auto;
-  }
-  
-  #qrcode { 
-    background: #fff; 
-    padding: 15px; 
-    border-radius: 10px; 
-    display: inline-block; 
-    margin: 15px 0;
-  }
-  
+  .modal-content { background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 25px; border-radius: 15px; max-width: 500px; width: 100%; text-align: center; border: 1px solid rgba(255,255,255,0.2); margin: auto; }
+  #qrcode { background: #fff; padding: 15px; border-radius: 10px; display: inline-block; margin: 15px 0; }
   #qrcode img { display: block; max-width: 100%; height: auto; }
-  
-  .pix-code { 
-    background: rgba(0,0,0,0.3); 
-    padding: 10px; 
-    border-radius: 8px; 
-    font-family: monospace; 
-    font-size: 0.75em; 
-    word-break: break-all; 
-    margin: 10px 0; 
-    max-height: 100px; 
-    overflow-y: auto;
-    text-align: left;
-  }
-  
+  .pix-code { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.75em; word-break: break-all; margin: 10px 0; max-height: 100px; overflow-y: auto; text-align: left; }
   .actions { display: flex; gap: 6px; flex-wrap: wrap; }
   .actions button { padding: 8px 12px; font-size: 0.8em; min-height: 36px; width: auto; }
-  
-  .db-status { 
-    display: inline-block; 
-    padding: 6px 12px; 
-    border-radius: 20px; 
-    font-size: 0.8em; 
-    font-weight: 600;
-  }
+  .db-status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
   .db-status.online { background: #4ade80; color: #000; }
   .db-status.offline { background: #fbbf24; color: #000; }
-  
+  .db-status.error { background: #ef4444; color: #fff; }
+  .save-indicator { display: inline-block; margin-left: 10px; font-size: 0.85em; padding: 4px 10px; border-radius: 15px; background: rgba(0,0,0,0.3); }
+  .save-indicator.saved { color: #4ade80; }
+  .save-indicator.saving { color: #fbbf24; }
+  .save-indicator.error { color: #ef4444; }
   .tab-buttons { display: flex; gap: 8px; margin-bottom: 15px; }
   .tab-buttons button { flex: 1; padding: 10px; }
-  .tab-buttons button.active { 
-    background: linear-gradient(135deg, #fbbf24, #f59e0b); 
-    color: #000;
-  }
-  
-  .preview { 
-    margin-top: 15px; 
-    padding: 12px; 
-    background: rgba(0,0,0,0.2); 
-    border-radius: 10px; 
-    display: none;
-    font-size: 0.9em;
-    line-height: 1.6;
-  }
-  
-  .info-text { 
-    font-size: 0.85em; 
-    opacity: 0.9; 
-    margin-bottom: 15px;
-    line-height: 1.5;
-  }
-  
+  .tab-buttons button.active { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
+  .preview { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; display: none; font-size: 0.9em; line-height: 1.6; }
+  .info-text { font-size: 0.85em; opacity: 0.9; margin-bottom: 15px; line-height: 1.5; }
   .info-text a { color: #4ade80; text-decoration: underline; }
-  
-  .fab {
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4ade80, #22c55e);
-    color: #fff;
-    font-size: 1.8em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    z-index: 100;
-    border: none;
-    cursor: pointer;
-  }
-  
-  @media (min-width: 768px) {
-    .fab { display: none; }
-  }
-  
-  .toast {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.9);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 25px;
-    z-index: 2000;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    font-size: 0.9em;
-  }
-  
+  .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: #fff; padding: 12px 24px; border-radius: 25px; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; font-size: 0.9em; max-width: 90%; text-align: center; }
   .toast.show { opacity: 1; }
+  .storage-info { font-size: 0.8em; opacity: 0.8; margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; }
+  .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+  .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>💰 Emprestimos 30% a.m.</h1>
 
-  <!-- Status do Banco de Dados -->
   <div style="text-align:center; margin-bottom:15px;">
     <span class="db-status" id="dbStatus">⏳ Verificando...</span>
+    <span class="save-indicator" id="saveIndicator">💾 Pronto</span>
   </div>
 
   <!-- Configuração -->
@@ -345,6 +102,7 @@
     <div class="tab-buttons">
       <button onclick="mostrarTab('pix')" id="btnTabPix" class="active">💳 Pix</button>
       <button onclick="mostrarTab('firebase')" id="btnTabFirebase">🗄️ Banco</button>
+      <button onclick="mostrarTab('backup')" id="btnTabBackup">💾 Backup</button>
     </div>
 
     <!-- Tab Pix -->
@@ -369,7 +127,7 @@
     <!-- Tab Firebase -->
     <div id="tabFirebase" style="display:none;">
       <p class="info-text">
-        Configure o Firebase para salvar dados online (acessível de qualquer dispositivo).
+        Configure o Firebase para salvar dados online.
         <a href="https://console.firebase.google.com/" target="_blank">Criar projeto gratuito</a>
       </p>
       <div class="grid">
@@ -389,6 +147,26 @@
       <div class="btn-row">
         <button onclick="salvarFirebase()">💾 Conectar Firebase</button>
         <button onclick="migrarParaFirebase()" class="secondary">🔄 Migrar dados locais</button>
+      </div>
+    </div>
+
+    <!-- Tab Backup -->
+    <div id="tabBackup" style="display:none;">
+      <p class="info-text">
+        💡 Faça backup dos seus dados para não perder nada. Exporte regularmente!
+      </p>
+      <div class="btn-row">
+        <button onclick="exportarDados()" class="backup">📤 Exportar Dados</button>
+        <div class="file-input-wrapper">
+          <button class="backup">📥 Importar Dados</button>
+          <input type="file" accept=".json" onchange="importarDados(event)">
+        </div>
+      </div>
+      <div class="storage-info" id="storageInfo">
+        Verificando armazenamento...
+      </div>
+      <div class="btn-row">
+        <button onclick="forcarSalvamento()" class="secondary">🔄 Forçar Salvamento Agora</button>
       </div>
     </div>
   </div>
@@ -491,48 +269,190 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
+// ============ SISTEMA DE STORAGE ROBUSTO ============
+const Storage = {
+  // Detecta ambiente
+  isCapacitor: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()),
+  hasCapacitorPreferences: () => !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Preferences),
+  
+  // Método principal de salvamento
+  async set(key, value) {
+    const data = JSON.stringify(value);
+    
+    // 1. Tenta Capacitor Preferences (melhor para apps nativos)
+    if (this.hasCapacitorPreferences()) {
+      try {
+        await window.Capacitor.Plugins.Preferences.set({ key, value: data });
+        return true;
+      } catch (e) {
+        console.warn('Capacitor Preferences falhou:', e);
+      }
+    }
+    
+    // 2. Tenta localStorage
+    try {
+      localStorage.setItem(key, data);
+      return true;
+    } catch (e) {
+      console.error('localStorage falhou:', e);
+    }
+    
+    // 3. Tenta sessionStorage como último recurso
+    try {
+      sessionStorage.setItem(key, data);
+      return true;
+    } catch (e) {
+      console.error('sessionStorage falhou:', e);
+    }
+    
+    return false;
+  },
+  
+  // Método principal de leitura
+  async get(key, defaultValue = null) {
+    // 1. Tenta Capacitor Preferences
+    if (this.hasCapacitorPreferences()) {
+      try {
+        const result = await window.Capacitor.Plugins.Preferences.get({ key });
+        if (result && result.value) {
+          return JSON.parse(result.value);
+        }
+      } catch (e) {
+        console.warn('Capacitor Preferences get falhou:', e);
+      }
+    }
+    
+    // 2. Tenta localStorage
+    try {
+      const data = localStorage.getItem(key);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.error('localStorage get falhou:', e);
+    }
+    
+    // 3. Tenta sessionStorage
+    try {
+      const data = sessionStorage.getItem(key);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.error('sessionStorage get falhou:', e);
+    }
+    
+    return defaultValue;
+  },
+  
+  async remove(key) {
+    if (this.hasCapacitorPreferences()) {
+      try { await window.Capacitor.Plugins.Preferences.remove({ key }); } catch(e) {}
+    }
+    try { localStorage.removeItem(key); } catch(e) {}
+    try { sessionStorage.removeItem(key); } catch(e) {}
+  },
+  
+  // Salva com backup automático
+  async salvarComBackup(key, value) {
+    const sucesso = await this.set(key, value);
+    // Cria backup com timestamp
+    if (sucesso) {
+      await this.set(key + '_backup', {
+        dados: value,
+        timestamp: Date.now()
+      });
+    }
+    return sucesso;
+  },
+  
+  // Recupera com fallback para backup
+  async recuperarComBackup(key) {
+    let dados = await this.get(key);
+    if (dados !== null) return dados;
+    
+    // Tenta o backup
+    const backup = await this.get(key + '_backup');
+    if (backup && backup.dados) {
+      console.log('🔄 Recuperado do backup!');
+      // Restaura o backup principal
+      await this.set(key, backup.dados);
+      return backup.dados;
+    }
+    
+    return null;
+  }
+};
+
 // ============ VARIÁVEIS GLOBAIS ============
 let emprestimos = [];
-let config = JSON.parse(localStorage.getItem('configPix') || '{}');
-let firebaseConfig = JSON.parse(localStorage.getItem('firebaseConfig') || 'null');
+let config = {};
+let firebaseConfig = null;
 let db = null;
 let usandoFirebase = false;
 let emprestimoAtual = null;
 
 // ============ INICIALIZAÇÃO ============
 window.addEventListener('load', async () => {
-  // Carrega configurações Pix
-  if (config.nome) document.getElementById('cfgNome').value = config.nome;
-  if (config.cidade) document.getElementById('cfgCidade').value = config.cidade;
-  if (config.chave) document.getElementById('cfgChave').value = config.chave;
+  mostrarToast('⏳ Carregando dados...');
+  atualizarSaveIndicator('saving', '⏳ Carregando...');
   
-  // Conecta Firebase se configurado
-  if (firebaseConfig) {
-    document.getElementById('fbApiKey').value = firebaseConfig.apiKey;
-    document.getElementById('fbAuthDomain').value = firebaseConfig.authDomain;
-    document.getElementById('fbProjectId').value = firebaseConfig.projectId;
-    await conectarFirebase();
-  } else {
-    emprestimos = JSON.parse(localStorage.getItem('emprestimos') || '[]');
-    atualizarStatusDB();
+  try {
+    // Carrega configurações Pix
+    config = await Storage.recuperarComBackup('configPix') || {};
+    if (config.nome) document.getElementById('cfgNome').value = config.nome;
+    if (config.cidade) document.getElementById('cfgCidade').value = config.cidade;
+    if (config.chave) document.getElementById('cfgChave').value = config.chave;
+    
+    // Carrega config Firebase
+    firebaseConfig = await Storage.recuperarComBackup('firebaseConfig');
+    if (firebaseConfig) {
+      document.getElementById('fbApiKey').value = firebaseConfig.apiKey || '';
+      document.getElementById('fbAuthDomain').value = firebaseConfig.authDomain || '';
+      document.getElementById('fbProjectId').value = firebaseConfig.projectId || '';
+      await conectarFirebase();
+    }
+    
+    // Carrega empréstimos (se não estiver usando Firebase)
+    if (!usandoFirebase) {
+      const dadosSalvos = await Storage.recuperarComBackup('emprestimos');
+      emprestimos = dadosSalvos || [];
+      atualizarStatusDB();
+    }
+    
+    // Datas padrão
+    const agora = new Date();
+    const local = new Date(agora.getTime() - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('inpData').value = local;
+    const venc = new Date(agora.getTime() + 30*24*60*60*1000 - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('inpVencimento').value = venc;
+    
+    document.getElementById('inpValor').addEventListener('input', atualizarPreview);
+    
+    atualizarInfoStorage();
+    renderizar();
+    
+    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} registros salvos`);
+    mostrarToast(`✅ ${emprestimos.length} empréstimos carregados`);
+    
+  } catch (error) {
+    console.error('Erro ao inicializar:', error);
+    mostrarToast('❌ Erro ao carregar dados');
+    atualizarSaveIndicator('error', '❌ Erro');
   }
-  
-  // Define datas padrão
-  const agora = new Date();
-  const local = new Date(agora.getTime() - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  document.getElementById('inpData').value = local;
-  
-  const venc = new Date(agora.getTime() + 30*24*60*60*1000 - agora.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  document.getElementById('inpVencimento').value = venc;
-  
-  // Preview em tempo real
-  document.getElementById('inpValor').addEventListener('input', atualizarPreview);
-  
-  renderizar();
+});
+
+// Salva automaticamente antes de fechar a página
+window.addEventListener('beforeunload', async () => {
+  if (!usandoFirebase) {
+    await Storage.salvarComBackup('emprestimos', emprestimos);
+  }
+});
+
+// Salva quando app entra em background (Capacitor)
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden && !usandoFirebase) {
+    await Storage.salvarComBackup('emprestimos', emprestimos);
+  }
 });
 
 // ============ FUNÇÕES DE INTERFACE ============
@@ -541,6 +461,36 @@ function mostrarToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function atualizarSaveIndicator(tipo, texto) {
+  const ind = document.getElementById('saveIndicator');
+  ind.className = 'save-indicator ' + tipo;
+  ind.textContent = texto;
+}
+
+function atualizarInfoStorage() {
+  const info = document.getElementById('storageInfo');
+  let texto = `📊 Status do armazenamento:\n`;
+  texto += `• Ambiente: ${Storage.isCapacitor() ? '📱 App Nativo (Capacitor)' : '🌐 Navegador'}\n`;
+  texto += `• Capacitor Preferences: ${Storage.hasCapacitorPreferences() ? '✅ Disponível' : '❌ Não disponível'}\n`;
+  texto += `• localStorage: ${testarStorage('localStorage') ? '✅ Funcionando' : '❌ Falhou'}\n`;
+  texto += `• Registros salvos: ${emprestimos.length}\n`;
+  texto += `• Modo: ${usandoFirebase ? '🟢 Firebase' : '🟡 Local'}`;
+  info.textContent = texto;
+  info.style.whiteSpace = 'pre-line';
+}
+
+function testarStorage(tipo) {
+  try {
+    const testKey = '__storage_test__';
+    if (tipo === 'localStorage') {
+      localStorage.setItem(testKey, '1');
+      localStorage.removeItem(testKey);
+      return true;
+    }
+  } catch(e) { return false; }
+  return false;
 }
 
 function atualizarPreview() {
@@ -556,8 +506,11 @@ function atualizarPreview() {
 function mostrarTab(tab) {
   document.getElementById('tabPix').style.display = tab === 'pix' ? 'block' : 'none';
   document.getElementById('tabFirebase').style.display = tab === 'firebase' ? 'block' : 'none';
+  document.getElementById('tabBackup').style.display = tab === 'backup' ? 'block' : 'none';
   document.getElementById('btnTabPix').classList.toggle('active', tab === 'pix');
   document.getElementById('btnTabFirebase').classList.toggle('active', tab === 'firebase');
+  document.getElementById('btnTabBackup').classList.toggle('active', tab === 'backup');
+  if (tab === 'backup') atualizarInfoStorage();
 }
 
 function atualizarStatusDB() {
@@ -572,7 +525,8 @@ function atualizarStatusDB() {
 }
 
 // ============ CONFIGURAÇÕES ============
-function salvarConfig() {
+async function salvarConfig() {
+  atualizarSaveIndicator('saving', '💾 Salvando...');
   config = {
     nome: document.getElementById('cfgNome').value.toUpperCase().trim(),
     cidade: document.getElementById('cfgCidade').value.toUpperCase().trim(),
@@ -580,10 +534,17 @@ function salvarConfig() {
   };
   if (!config.nome || !config.cidade || !config.chave) {
     mostrarToast('⚠️ Preencha todos os campos!');
+    atualizarSaveIndicator('error', '❌ Erro');
     return;
   }
-  localStorage.setItem('configPix', JSON.stringify(config));
-  mostrarToast('✅ Configurações salvas!');
+  const sucesso = await Storage.salvarComBackup('configPix', config);
+  if (sucesso) {
+    mostrarToast('✅ Configurações salvas!');
+    atualizarSaveIndicator('saved', '💾 Salvo!');
+  } else {
+    mostrarToast('❌ Erro ao salvar!');
+    atualizarSaveIndicator('error', '❌ Falhou');
+  }
 }
 
 async function salvarFirebase() {
@@ -597,29 +558,36 @@ async function salvarFirebase() {
   }
   
   firebaseConfig = { apiKey, authDomain, projectId };
-  localStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
-  
+  await Storage.salvarComBackup('firebaseConfig', firebaseConfig);
   await conectarFirebase();
 }
 
 async function conectarFirebase() {
+  atualizarSaveIndicator('saving', '⏳ Conectando...');
   try {
-    if (typeof firebase === 'undefined') {
-      throw new Error('Firebase não carregado');
-    }
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (typeof firebase === 'undefined') throw new Error('Firebase não carregado');
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    
-    // Testa conexão
     await db.collection('emprestimos').limit(1).get();
-    
     usandoFirebase = true;
     
+    // Carrega dados iniciais
+    await carregarDados();
+    
     // Listener em tempo real
-    db.collection('emprestimos').onSnapshot(() => {
-      carregarDados();
+    db.collection('emprestimos').onSnapshot(async (snapshot) => {
+      emprestimos = [];
+      snapshot.forEach(doc => {
+        emprestimos.push({ id: doc.id, ...doc.data() });
+      });
+      // Cache local dos dados do Firebase
+      await Storage.salvarComBackup('emprestimos_cache', emprestimos);
+      renderizar();
+      atualizarSaveIndicator('saved', `💾 ${emprestimos.length} sincronizados`);
+    }, (error) => {
+      console.error('Erro listener:', error);
+      // Se falhar, usa cache local
+      recuperarDoCache();
     });
     
     atualizarStatusDB();
@@ -628,9 +596,22 @@ async function conectarFirebase() {
     console.error('Erro Firebase:', error);
     mostrarToast('❌ Erro ao conectar Firebase');
     usandoFirebase = false;
-    emprestimos = JSON.parse(localStorage.getItem('emprestimos') || '[]');
+    await recuperarDoCache();
     atualizarStatusDB();
   }
+}
+
+async function recuperarDoCache() {
+  const cache = await Storage.recuperarComBackup('emprestimos_cache');
+  if (cache) {
+    emprestimos = cache;
+    mostrarToast('🔄 Usando cache local');
+  } else {
+    const locais = await Storage.recuperarComBackup('emprestimos');
+    emprestimos = locais || [];
+  }
+  atualizarSaveIndicator('saved', `💾 ${emprestimos.length} registros`);
+  renderizar();
 }
 
 async function carregarDados() {
@@ -640,6 +621,7 @@ async function carregarDados() {
     snapshot.forEach(doc => {
       emprestimos.push({ id: doc.id, ...doc.data() });
     });
+    await Storage.salvarComBackup('emprestimos_cache', emprestimos);
     renderizar();
   }
 }
@@ -649,26 +631,26 @@ async function migrarParaFirebase() {
     mostrarToast('⚠️ Configure o Firebase primeiro!');
     return;
   }
-  
-  const locais = JSON.parse(localStorage.getItem('emprestimos') || '[]');
+  const locais = await Storage.recuperarComBackup('emprestimos') || [];
   if (locais.length === 0) {
     mostrarToast('Sem dados locais para migrar');
     return;
   }
-  
   if (!confirm(`Migrar ${locais.length} empréstimos para o Firebase?`)) return;
   
+  atualizarSaveIndicator('saving', '🔄 Migrando...');
   try {
     for (const emp of locais) {
       const { id, ...dados } = emp;
       await db.collection('emprestimos').add(dados);
     }
     mostrarToast('✅ Dados migrados!');
-    localStorage.removeItem('emprestimos');
-    await carregarDados();
+    await Storage.remove('emprestimos');
+    atualizarSaveIndicator('saved', '✅ Migrado!');
   } catch (error) {
     console.error(error);
     mostrarToast('❌ Erro ao migrar');
+    atualizarSaveIndicator('error', '❌ Erro');
   }
 }
 
@@ -685,6 +667,8 @@ async function adicionarEmprestimo() {
     return;
   }
   
+  atualizarSaveIndicator('saving', '💾 Salvando...');
+  
   const novoEmp = {
     nome, telefone, valor, data, vencimento,
     status: 'pendente',
@@ -697,20 +681,26 @@ async function adicionarEmprestimo() {
     } else {
       novoEmp.id = Date.now();
       emprestimos.push(novoEmp);
-      localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+      const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
+      if (!sucesso) {
+        mostrarToast('❌ ERRO: Dados não foram salvos!');
+        atualizarSaveIndicator('error', '❌ Falhou');
+        return;
+      }
     }
     
-    // Limpa formulário
     document.getElementById('inpNome').value = '';
     document.getElementById('inpTelefone').value = '';
     document.getElementById('inpValor').value = '';
     document.getElementById('preview').style.display = 'none';
     
     renderizar();
-    mostrarToast('✅ Empréstimo registrado!');
+    mostrarToast('✅ Empréstimo registrado e salvo!');
+    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
   } catch (error) {
     console.error(error);
     mostrarToast('❌ Erro ao registrar');
+    atualizarSaveIndicator('error', '❌ Erro');
   }
 }
 
@@ -773,6 +763,8 @@ function renderizar() {
 async function marcarPago(id) {
   if (!confirm('Confirmar pagamento recebido?')) return;
   
+  atualizarSaveIndicator('saving', '💾 Salvando...');
+  
   try {
     if (usandoFirebase && db) {
       await db.collection('emprestimos').doc(id).update({
@@ -784,33 +776,148 @@ async function marcarPago(id) {
       if (emp) {
         emp.status = 'pago';
         emp.pagoEm = new Date().toISOString();
-        localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+        const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
+        if (!sucesso) {
+          mostrarToast('❌ ERRO ao salvar!');
+          atualizarSaveIndicator('error', '❌ Falhou');
+          return;
+        }
       }
     }
     renderizar();
-    mostrarToast('✅ Pagamento confirmado!');
+    mostrarToast('✅ Pagamento confirmado e salvo!');
+    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
   } catch (error) {
     console.error(error);
     mostrarToast('❌ Erro ao confirmar');
+    atualizarSaveIndicator('error', '❌ Erro');
   }
 }
 
 async function excluir(id) {
   if (!confirm('Excluir este empréstimo?')) return;
   
+  atualizarSaveIndicator('saving', '💾 Salvando...');
+  
   try {
     if (usandoFirebase && db) {
       await db.collection('emprestimos').doc(id).delete();
     } else {
       emprestimos = emprestimos.filter(e => String(e.id) !== String(id));
-      localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+      const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
+      if (!sucesso) {
+        mostrarToast('❌ ERRO ao salvar!');
+        atualizarSaveIndicator('error', '❌ Falhou');
+        return;
+      }
     }
     renderizar();
-    mostrarToast('🗑️ Empréstimo excluído');
+    mostrarToast('🗑️ Excluído e salvo!');
+    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
   } catch (error) {
     console.error(error);
     mostrarToast('❌ Erro ao excluir');
+    atualizarSaveIndicator('error', '❌ Erro');
   }
+}
+
+// ============ BACKUP ============
+async function exportarDados() {
+  const dados = {
+    versao: '1.0',
+    exportadoEm: new Date().toISOString(),
+    config: config,
+    firebaseConfig: firebaseConfig,
+    emprestimos: emprestimos
+  };
+  
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-emprestimos-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  mostrarToast('✅ Backup exportado!');
+}
+
+async function importarDados(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!confirm('⚠️ Isso substituirá TODOS os dados atuais. Continuar?')) {
+    event.target.value = '';
+    return;
+  }
+  
+  try {
+    const text = await file.text();
+    const dados = JSON.parse(text);
+    
+    if (!dados.emprestimos || !Array.isArray(dados.emprestimos)) {
+      throw new Error('Arquivo inválido');
+    }
+    
+    atualizarSaveIndicator('saving', '📥 Importando...');
+    
+    // Restaura configurações
+    if (dados.config) {
+      config = dados.config;
+      await Storage.salvarComBackup('configPix', config);
+      document.getElementById('cfgNome').value = config.nome || '';
+      document.getElementById('cfgCidade').value = config.cidade || '';
+      document.getElementById('cfgChave').value = config.chave || '';
+    }
+    
+    // Restaura empréstimos
+    emprestimos = dados.emprestimos;
+    
+    if (usandoFirebase && db) {
+      // Migrar para Firebase
+      if (confirm('Importar também para o Firebase?')) {
+        for (const emp of emprestimos) {
+          const { id, ...dadosEmp } = emp;
+          if (id && id.toString().length === 20) {
+            await db.collection('emprestimos').doc(id).set(dadosEmp);
+          } else {
+            await db.collection('emprestimos').add(dadosEmp);
+          }
+        }
+      }
+    } else {
+      await Storage.salvarComBackup('emprestimos', emprestimos);
+    }
+    
+    renderizar();
+    mostrarToast(`✅ ${emprestimos.length} registros importados!`);
+    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
+    atualizarInfoStorage();
+  } catch (error) {
+    console.error(error);
+    mostrarToast('❌ Erro ao importar arquivo');
+    atualizarSaveIndicator('error', '❌ Erro');
+  }
+  
+  event.target.value = '';
+}
+
+async function forcarSalvamento() {
+  atualizarSaveIndicator('saving', '💾 Salvando...');
+  const sucesso = await Storage.salvarComBackup('emprestimos', emprestimos);
+  await Storage.salvarComBackup('configPix', config);
+  if (firebaseConfig) await Storage.salvarComBackup('firebaseConfig', firebaseConfig);
+  
+  if (sucesso) {
+    mostrarToast(`✅ ${emprestimos.length} registros salvos!`);
+    atualizarSaveIndicator('saved', `💾 ${emprestimos.length} salvos`);
+  } else {
+    mostrarToast('❌ Falha ao salvar!');
+    atualizarSaveIndicator('error', '❌ Falhou');
+  }
+  atualizarInfoStorage();
 }
 
 // ============ PIX ============
@@ -824,7 +931,6 @@ function gerarPix(id) {
   
   emprestimoAtual = emp;
   const total = emp.valor + calcularJuros(emp);
-  
   const payload = gerarPayloadPix(total, emp.id);
   
   document.getElementById('modalCliente').textContent = `Cliente: ${emp.nome}`;
@@ -833,12 +939,7 @@ function gerarPix(id) {
   
   const qrDiv = document.getElementById('qrcode');
   qrDiv.innerHTML = '';
-  new QRCode(qrDiv, { 
-    text: payload, 
-    width: 220, 
-    height: 220, 
-    correctLevel: QRCode.CorrectLevel.M 
-  });
+  new QRCode(qrDiv, { text: payload, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
   
   document.getElementById('modalPix').classList.add('active');
 }
@@ -888,161 +989,4 @@ function crc16(str) {
 function copiarPix() {
   const code = document.getElementById('pixCode').textContent;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(() => {
-      mostrarToast('✅ Código Pix copiado!');
-    }).catch(() => {
-      fallbackCopiar(code);
-    });
-  } else {
-    fallbackCopiar(code);
-  }
-}
-
-function fallbackCopiar(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  try {
-    document.execCommand('copy');
-    mostrarToast('✅ Código Pix copiado!');
-  } catch (e) {
-    mostrarToast('❌ Erro ao copiar');
-  }
-  document.body.removeChild(ta);
-}
-
-function enviarWhatsApp() {
-  if (!emprestimoAtual) return;
-  if (!emprestimoAtual.telefone) {
-    mostrarToast('⚠️ Telefone não cadastrado!');
-    return;
-  }
-  
-  const total = emprestimoAtual.valor + calcularJuros(emprestimoAtual);
-  const pixCode = document.getElementById('pixCode').textContent;
-  
-  let mensagem = `Olá ${emprestimoAtual.nome}! 👋\n\n`;
-  mensagem += `Segue o Pix para pagamento do empréstimo:\n\n`;
-  mensagem += `💰 Valor: ${formatar(total)}\n`;
-  mensagem += `📅 Vencimento: ${formatarData(emprestimoAtual.vencimento)}\n\n`;
-  mensagem += `📱 Código Pix Copia e Cola:\n${pixCode}\n\n`;
-  mensagem += `Qualquer dúvida, estou à disposição!`;
-  
-  const telefone = emprestimoAtual.telefone.replace(/\D/g, '');
-  const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
-  window.open(url, '_blank');
-}
-
-function fecharModal() {
-  document.getElementById('modalPix').classList.remove('active');
-  emprestimoAtual = null;
-}
-
-// ============ RELATÓRIO PDF ============
-function gerarRelatorio() {
-  if (emprestimos.length === 0) {
-    mostrarToast('⚠️ Nenhum empréstimo para gerar relatório');
-    return;
-  }
-  
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Título
-    doc.setFontSize(18);
-    doc.setTextColor(30, 60, 114);
-    doc.text('Relatório de Empréstimos', 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
-    
-    // Estatísticas
-    let totalEmp = 0, totalReceber = 0, totalRecebido = 0;
-    emprestimos.forEach(emp => {
-      const juros = calcularJuros(emp);
-      const total = emp.valor + juros;
-      totalEmp += emp.valor;
-      if (calcularStatus(emp) === 'pago') totalRecebido += total;
-      else totalReceber += total;
-    });
-    
-    doc.setFontSize(11);
-    doc.setTextColor(0);
-    doc.text(`Total Emprestado: ${formatar(totalEmp)}`, 14, 40);
-    doc.text(`A Receber: ${formatar(totalReceber)}`, 14, 48);
-    doc.text(`Já Recebido: ${formatar(totalRecebido)}`, 14, 56);
-    doc.text(`Total de registros: ${emprestimos.length}`, 14, 64);
-    
-    // Tabela
-    const tableData = emprestimos.map(emp => {
-      const juros = calcularJuros(emp);
-      const total = emp.valor + juros;
-      return [
-        emp.nome,
-        emp.telefone || '-',
-        formatar(emp.valor),
-        formatar(total),
-        formatarData(emp.data),
-        formatarData(emp.vencimento),
-        calcularStatus(emp).toUpperCase()
-      ];
-    });
-    
-    doc.autoTable({
-      startY: 72,
-      head: [['Cliente', 'Tel', 'Valor', 'Total', 'Data', 'Venc.', 'Status']],
-      body: tableData,
-      theme: 'striped',
-      headStyles: { fillColor: [30, 60, 114], fontSize: 8 },
-      bodyStyles: { fontSize: 7 },
-      columnStyles: {
-        0: { cellWidth: 35 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 22 },
-        4: { cellWidth: 28 },
-        5: { cellWidth: 28 },
-        6: { cellWidth: 18 }
-      }
-    });
-    
-    doc.save(`relatorio-${Date.now()}.pdf`);
-    mostrarToast('✅ PDF gerado!');
-  } catch (error) {
-    console.error(error);
-    mostrarToast('❌ Erro ao gerar PDF');
-  }
-}
-
-// ============ UTILITÁRIOS ============
-function formatar(v) {
-  return 'R$ ' + Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-
-function formatarData(d) {
-  if (!d) return '-';
-  const dt = new Date(d);
-  if (isNaN(dt.getTime())) return '-';
-  return dt.toLocaleString('pt-BR', { 
-    day:'2-digit', month:'2-digit', year:'numeric', 
-    hour:'2-digit', minute:'2-digit' 
-  });
-}
-
-// Previne zoom em double-tap (mobile)
-let lastTouchEnd = 0;
-document.addEventListener('touchend', (e) => {
-  const now = Date.now();
-  if (now - lastTouchEnd <= 300) {
-    e.preventDefault();
-  }
-  lastTouchEnd = now;
-}, { passive: false });
-</script>
-</body>
-</html>
+    navigator.clipboard.writeText(code).then(() => mostrarToast('✅ Cop
