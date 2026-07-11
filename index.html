@@ -1,452 +1,396 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1e3c72">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Emprestimos 30%</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Empréstimos 💰 30% a.m.</title>
+    <style>
+        :root {
+            --primary: #25d366;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --accent: #6366f1;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+        }
 
-<!-- Bibliotecas Estáveis -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: var(--light);
+            margin: 0;
+            padding: 20px;
+        }
 
-<style>
-    :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #4ade80; --danger: #ef4444; --text: #ffffff; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: linear-gradient(135deg, var(--primary), var(--secondary)); min-height: 100vh; color: var(--text); padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom); overscroll-behavior: none; }
-    
-    /* Componentes */
-    .card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
-    h1 { text-align: center; font-size: 1.4rem; margin-bottom: 15px; padding-top: 10px; }
-    h3 { font-size: 1rem; margin-bottom: 12px; opacity: 0.9; }
-    
-    /* Inputs e Labels */
-    label { display: block; font-size: 0.8rem; margin-bottom: 4px; opacity: 0.8; }
-    input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 16px; margin-bottom: 10px; }
-    input:focus { outline: 2px solid var(--accent); border-color: transparent; }
-    
-    /* Botões */
-    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: transform 0.1s; margin-top: 5px; color: white; }
-    button:active { transform: scale(0.98); }
-    .btn-green { background: var(--accent); color: #000; }
-    .btn-blue { background: #3b82f6; }
-    .btn-red { background: var(--danger); }
-    .btn-whats { background: #25d366; }
-    .btn-row { display: flex; gap: 10px; margin-top: 10px; }
-    .btn-row button { flex: 1; margin-top: 0; }
-    
-    /* Stats Grid */
-    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-    .stat-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: center; }
-    .stat-val { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
-    .stat-lbl { font-size: 0.7rem; opacity: 0.7; margin-top: 2px; }
-    
-    /* Tabela Responsiva */
-    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 0 20px; }
-    table { width: 100%; border-collapse: collapse; min-width: 600px; }
-    th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
-    th { background: rgba(0,0,0,0.2); position: sticky; top: 0; }
-    .status { padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-    .st-pending { background: #fbbf24; color: black; }
-    .st-paid { background: var(--accent); color: black; }
-    .st-late { background: var(--danger); }
-    
-    /* Modal */
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-    .modal.active { display: flex; }
-    .modal-content { background: var(--primary); width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.2); max-height: 90vh; overflow-y: auto; }
-    .qr-img { background: white; padding: 15px; border-radius: 10px; margin: 15px auto; display: block; max-width: 200px; }
-    .pix-code { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.7rem; word-break: break-all; margin: 10px 0; max-height: 80px; overflow-y: auto; text-align: left; }
-    
-    /* Toast */
-    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 12px 24px; border-radius: 25px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2000; white-space: nowrap; }
-    .toast.show { opacity: 1; }
-    
-    /* Tabs Config */
-    .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; }
-    .tab-btn { flex: 1; padding: 10px; border-radius: 8px; background: transparent; margin: 0; font-size: 0.9rem; opacity: 0.7; }
-    .tab-btn.active { background: rgba(255,255,255,0.1); opacity: 1; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-</style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .relogio-digital {
+            background: #020617;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            font-family: monospace;
+            font-size: 18px;
+            color: #38bdf8;
+            letter-spacing: 1px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+        }
+
+        h1, h2, h3 { margin: 0; }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn-success { background: var(--primary); color: #000; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-info { background: var(--info); color: #000; }
+
+        .form-container {
+            background: var(--dark);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .form-group input {
+            background: #334155;
+            border: 1px solid #475569;
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--dark);
+            border-left: 5px solid var(--accent);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
+
+        .card.vencido { border-left-color: var(--danger); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .cronometro {
+            background: #334155;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .pix-box {
+            background: #111827;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 13px;
+            border: 1px dashed var(--primary);
+        }
+
+        .pix-destaque {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .actions button {
+            flex: 1;
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        .alert-box {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>💰 Painel de Empréstimo</h1>
-    
-    <!-- Status DB -->
-    <div style="text-align:center; margin-bottom:10px;">
-        <span id="dbStatus" style="font-size:0.8rem; padding:4px 12px; border-radius:20px; background:rgba(0,0,0,0.3);">🟡 Modo Offline</span>
-    </div>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>Painel de Empréstimos 💸🏦</h1>
+                <p style="color: #94a3b8; margin: 5px 0 0 0;">📈 Taxa fixa de 30% ao mês</p>
+            </div>
+            <div class="header-right">
+                <div class="relogio-digital" id="relogio">00:00:00</div>
+                <button class="btn" onclick="forçarAtualizacao()">🔄 Atualizar</button>
+                <!-- Atalho direto para abrir a outra página -->
+                <a href="historico.html" class="btn btn-info">📜 Ver Histórico (Nova Página)</a>
+            </div>
+        </header>
 
-    <!-- Configurações -->
-    <div class="card">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('pix')">💳 Pix</button>
-            <button class="tab-btn" onclick="switchTab('db')">☁️ Nuvem</button>
-        </div>
-
-        <div id="tab-pix" class="tab-content active">
-            <label>Nome Beneficiário</label>
-            <input type="text" id="cfgNome" placeholder="SEU NOME COMPLETO">
-            <label>Cidade</label>
-            <input type="text" id="cfgCidade" placeholder="SAO PAULO" maxlength="15">
-            <label>Chave Pix</label>
-            <input type="text" id="cfgChave" placeholder="CPF, Email ou Aleatória">
-            <button class="btn-blue" onclick="saveConfig()">Salvar Dados Pix</button>
-        </div>
-
-        <div id="tab-db" class="tab-content">
-            <p style="font-size:0.8rem; opacity:0.8; margin-bottom:10px;">Configure para acessar de vários dispositivos.</p>
-            <label>Firebase API Key</label>
-            <input type="text" id="fbKey">
-            <label>Auth Domain</label>
-            <input type="text" id="fbDomain">
-            <label>Project ID</label>
-            <input type="text" id="fbProject">
-            <button class="btn-blue" onclick="initFirebase()">Conectar Firebase</button>
-        </div>
-    </div>
-
-    <!-- Dashboard -->
-    <div class="stats">
-        <div class="stat-box"><div class="stat-val" id="sTotal">R$ 0</div><div class="stat-lbl">Emprestado</div></div>
-        <div class="stat-box"><div class="stat-val" id="sPending">R$ 0</div><div class="stat-lbl">A Receber</div></div>
-        <div class="stat-box"><div class="stat-val" id="sReceived">R$ 0</div><div class="stat-lbl">Recebido</div></div>
-        <div class="stat-box"><div class="stat-val" id="sCount">0</div><div class="stat-lbl">Ativos</div></div>
-    </div>
-
-    <!-- Novo Empréstimo -->
-    <div class="card">
-        <h3>📝 Novo Registro</h3>
-        <label>Nome Cliente</label>
-        <input type="text" id="inNome">
-        <label>WhatsApp (apenas números)</label>
-        <input type="tel" id="inTel" placeholder="11999998888">
-        <label>Valor Emprestado (R$)</label>
-        <input type="number" id="inValor" step="0.01" oninput="calcPreview()">
-        
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1"><label>Data Saída</label><input type="datetime-local" id="inData"></div>
-            <div style="flex:1"><label>Vencimento</label><input type="datetime-local" id="inVenc"></div>
-        </div>
-
-        <div id="preview" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin:10px 0; font-size:0.85rem; display:none;">
-            Juros (30%): <span id="prevJuros" style="color:#fbbf24">R$ 0,00</span> | 
-            Total: <span id="prevTotal" style="color:var(--accent); font-weight:bold;">R$ 0,00</span>
-        </div>
-
-        <div class="btn-row">
-            <button class="btn-green" onclick="addLoan()">➕ Registrar</button>
-            <button class="btn-red" onclick="generatePDF()">📄 PDF</button>
-        </div>
-    </div>
-
-    <!-- Lista -->
-    <div class="card">
-        <h3>📋 Registros</h3>
-        <div class="table-container">
-            <table>
-                <thead><tr><th>Cliente</th><th>Valor</th><th>Total</th><th>Venc.</th><th>Status</th><th>Ação</th></tr></thead>
-                <tbody id="tbBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Pix -->
-<div class="modal" id="pixModal">
-    <div class="modal-content">
-        <h3>Pagamento Pix</h3>
-        <p id="mCliente" style="margin:5px 0; opacity:0.8;"></p>
-        <h2 id="mValor" style="color:var(--accent); margin-bottom:10px;"></h2>
-        
-        <img id="qrImg" class="qr-img" alt="QR Code Pix">
-        <div class="pix-code" id="pixCodeText"></div>
-        
-        <div class="btn-row">
-            <button class="btn-blue" onclick="copyPix()">📋 Copiar</button>
-            <button class="btn-whats" onclick="sendWhats()">📱 Zap</button>
-        </div>
-        <button class="btn-red" onclick="closeModal()" style="margin-top:15px;">Fechar</button>
-    </div>
-</div>
-
-<div class="toast" id="toast">Mensagem</div>
-
-<script>
-/** ESTADO GLOBAL **/
-let loans = JSON.parse(localStorage.getItem('loans_v2') || '[]');
-let config = JSON.parse(localStorage.getItem('pix_cfg') || '{}');
-let db = null;
-let isOnline = false;
-let currentLoan = null;
-
-/** INICIALIZAÇÃO **/
-window.onload = () => {
-    // Carregar configs
-    if(config.nome) document.getElementById('cfgNome').value = config.nome;
-    if(config.cidade) document.getElementById('cfgCidade').value = config.cidade;
-    if(config.chave) document.getElementById('cfgChave').value = config.chave;
-    
-    // Datas padrão
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('inData').value = now.toISOString().slice(0,16);
-    
-    const venc = new Date(now);
-    venc.setDate(venc.getDate() + 30);
-    document.getElementById('inVenc').value = venc.toISOString().slice(0,16);
-    
-    render();
-};
-
-/** UTILITÁRIOS **/
-const fmt = v => 'R$ ' + Number(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-BR') + ' ' + new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '-';
-const toast = msg => { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); };
-const switchTab = tab => {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    event.target.classList.add('active');
-};
-
-/** LÓGICA DE NEGÓCIO **/
-function calcPreview() {
-    const v = parseFloat(document.getElementById('inValor').value) || 0;
-    const j = v * 0.30;
-    document.getElementById('preview').style.display = v > 0 ? 'block' : 'none';
-    document.getElementById('prevJuros').textContent = fmt(j);
-    document.getElementById('prevTotal').textContent = fmt(v + j);
-}
-
-function saveConfig() {
-    config = {
-        nome: document.getElementById('cfgNome').value.toUpperCase(),
-        cidade: document.getElementById('cfgCidade').value.toUpperCase(),
-        chave: document.getElementById('cfgChave').value.trim()
-    };
-    localStorage.setItem('pix_cfg', JSON.stringify(config));
-    toast('✅ Configuração salva!');
-}
-
-async function addLoan() {
-    const nome = document.getElementById('inNome').value.trim();
-    const tel = document.getElementById('inTel').value.replace(/\D/g,'');
-    const val = parseFloat(document.getElementById('inValor').value);
-    const data = document.getElementById('inData').value;
-    const venc = document.getElementById('inVenc').value;
-
-    if(!nome || !val || !data || !venc) return toast('⚠️ Preencha todos os campos!');
-
-    const loan = { id: Date.now(), nome, tel, val, data, venc, status:'pendente', created: new Date().toISOString() };
-
-    if(isOnline && db) {
-        await db.collection('loans').add(loan);
-    } else {
-        loans.push(loan);
-        localStorage.setItem('loans_v2', JSON.stringify(loans));
-    }
-    
-    // Reset form
-    document.getElementById('inNome').value = '';
-    document.getElementById('inTel').value = '';
-    document.getElementById('inValor').value = '';
-    document.getElementById('preview').style.display = 'none';
-    render();
-    toast('✅ Registrado com sucesso!');
-}
-
-function getInterest(l) {
-    const days = (new Date(l.venc) - new Date(l.data)) / (1000*60*60*24);
-    return l.val * 0.30 * (days/30);
-}
-
-function getStatus(l) {
-    if(l.status === 'pago') return 'pago';
-    return new Date(l.venc) < new Date() ? 'atrasado' : 'pendente';
-}
-
-function render() {
-    const tb = document.getElementById('tbBody');
-    tb.innerHTML = '';
-    let totEmp=0, totRec=0, totPend=0, ativos=0;
-
-    loans.forEach(l => {
-        const jur = getInterest(l);
-        const total = l.val + jur;
-        const st = getStatus(l);
-        
-        totEmp += l.val;
-        if(st==='pago') totRec += total; else { totPend += total; ativos++; }
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${l.nome}</td>
-            <td>${fmt(l.val)}</td>
-            <td style="color:var(--accent)">${fmt(total)}</td>
-            <td>${fmtDate(l.venc)}</td>
-            <td><span class="status st-${st==='pago'?'paid':st==='atrasado'?'late':'pending'}">${st}</span></td>
-            <td>
-                <div style="display:flex;gap:5px;">
-                    <button style="padding:8px;font-size:0.7rem;margin:0;" onclick="openPix('${l.id}')">Pix</button>
-                    ${st!=='pago'?`<button style="padding:8px;font-size:0.7rem;margin:0;background:#3b82f6;" onclick="markPaid('${l.id}')">✓</button>`:''}
-                    <button style="padding:8px;font-size:0.7rem;margin:0;background:#ef4444;" onclick="delLoan('${l.id}')">🗑</button>
+        <div class="form-container">
+            <h3>➕ Cadastrar Novo Empréstimo</h3>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label>👤 Nome do Cliente</label>
+                    <input type="text" id="nome" placeholder="Ex: João Silva">
                 </div>
-            </td>
-        `;
-        tb.appendChild(tr);
-    });
+                <div class="form-group">
+                    <label>💵 Valor Emprestado (R$)</label>
+                    <input type="number" id="valor" placeholder="Ex: 1000">
+                </div>
+                <div class="form-group">
+                    <label>📅 Data de Vencimento</label>
+                    <input type="date" id="dataVencimento">
+                </div>
+                <div class="form-group">
+                    <label>🕒 Horário do Vencimento</label>
+                    <input type="time" id="horaVencimento" value="12:00">
+                </div>
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button class="btn btn-success" onclick="adicionarEmprestimo()">💾 Salvar Empréstimo</button>
+                </div>
+            </div>
+        </div>
 
-    document.getElementById('sTotal').textContent = fmt(totEmp);
-    document.getElementById('sPending').textContent = fmt(totPend);
-    document.getElementById('sReceived').textContent = fmt(totRec);
-    document.getElementById('sCount').textContent = ativos;
-}
+        <h2>👥 Empréstimos Ativos</h2>
+        <hr style="border-color: #334155; margin-bottom: 20px;">
 
-async function markPaid(id) {
-    if(!confirm('Confirmar recebimento?')) return;
-    if(isOnline && db) {
-        await db.collection('loans').doc(id).update({status:'pago', paidAt:new Date().toISOString()});
-    } else {
-        const l = loans.find(x=>String(x.id)===String(id));
-        if(l) { l.status='pago'; localStorage.setItem('loans_v2', JSON.stringify(loans)); }
-    }
-    render();
-    toast('✅ Pago!');
-}
+        <div class="cards-grid" id="listaEmprestimos"></div>
+    </div>
 
-async function delLoan(id) {
-    if(!confirm('Excluir registro?')) return;
-    if(isOnline && db) {
-        await db.collection('loans').doc(id).delete();
-    } else {
-        loans = loans.filter(x=>String(x.id)!==String(id));
-        localStorage.setItem('loans_v2', JSON.stringify(loans));
-    }
-    render();
-}
+    <div id="alerta" class="alert-box"></div>
 
-/** PIX & QR CODE **/
-function openPix(id) {
-    if(!config.chave) return toast('⚠️ Configure sua chave Pix primeiro!');
-    const l = loans.find(x=>String(x.id)===String(id));
-    if(!l) return;
-    
-    currentLoan = l;
-    const total = l.val + getInterest(l);
-    const payload = buildPixPayload(total, l.id);
-    
-    document.getElementById('mCliente').textContent = l.nome;
-    document.getElementById('mValor').textContent = fmt(total);
-    document.getElementById('pixCodeText').textContent = payload;
-    
-    // Usa API pública confiável para gerar QR (evita erro de lib local)
-    document.getElementById('qrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
-    
-    document.getElementById('pixModal').classList.add('active');
-}
+    <script>
+        const MEU_PIX = {
+            chave: "9198544-6070",
+            banco: "PagSeguro",
+            nome: "Diego Dias",
+            cidade: "Santa Barbara do Pará"
+        };
 
-function buildPixPayload(val, id) {
-    const gui = 'br.gov.bcb.pix';
-    const mai = tlv('00', gui) + tlv('01', config.chave);
-    const ref = 'EMP' + String(id).slice(-8);
-    const add = tlv('05', ref);
-    
-    let p = '';
-    p += tlv('00', '01');
-    p += tlv('26', mai);
-    p += tlv('52', '0000');
-    p += tlv('53', '986');
-    if(val>0) p += tlv('54', val.toFixed(2));
-    p += tlv('58', 'BR');
-    p += tlv('59', config.nome.substring(0,25));
-    p += tlv('60', config.cidade.substring(0,15));
-    p += tlv('62', add);
-    p += '6304';
-    return p + crc16(p);
-}
+        let emprestimos = JSON.parse(localStorage.getItem('emprestimos')) || [];
+        let historicoFinalizados = JSON.parse(localStorage.getItem('historico_finalizados')) || [];
 
-function tlv(tag, val) { return tag + String(val.length).padStart(2,'0') + val; }
+        function atualizarRelogio() {
+            const agora = new Date();
+            document.getElementById('relogio').innerText = agora.toLocaleTimeString('pt-BR');
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
 
-function crc16(str) {
-    let crc = 0xFFFF;
-    for(let i=0; i<str.length; i++) {
-        crc ^= str.charCodeAt(i) << 8;
-        for(let j=0; j<8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-    }
-    return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4,'0');
-}
+        function adicionarEmprestimo() {
+            const nome = document.getElementById('nome').value;
+            const valor = parseFloat(document.getElementById('valor').value);
+            const data = document.getElementById('dataVencimento').value;
+            const hora = document.getElementById('horaVencimento').value;
 
-function copyPix() {
-    const code = document.getElementById('pixCodeText').textContent;
-    navigator.clipboard.writeText(code).then(()=>toast('📋 Copiado!')).catch(()=>toast('❌ Erro ao copiar'));
-}
+            if(!nome || !valor || !data || !hora) {
+                alert("⚠️ Por favor, preencha todos os campos!");
+                return;
+            }
 
-function sendWhats() {
-    if(!currentLoan || !currentLoan.tel) return toast('⚠️ Sem telefone cadastrado!');
-    const total = currentLoan.val + getInterest(currentLoan);
-    const code = document.getElementById('pixCodeText').textContent;
-    
-    const msg = `Olá ${currentLoan.nome}! 👋\n\nSeu empréstimo venceu/em breve.\n💰 Valor: ${fmt(total)}\n📅 Venc: ${fmtDate(currentLoan.venc)}\n\n📱 Pix Copia e Cola:\n${code}\n\nQualquer dúvida, estou à disposição!`;
-    window.open(`https://wa.me/55${currentLoan.tel}?text=${encodeURIComponent(msg)}`, '_blank');
-}
+            const novoEmprestimo = {
+                id: Date.now(),
+                nome,
+                valorInicial: valor,
+                valorTotal: valor * 1.30,
+                vencimento: `${data}T${hora}`
+            };
 
-function closeModal() { document.getElementById('pixModal').classList.remove('active'); currentLoan=null; }
+            emprestimos.push(novoEmprestimo);
+            salvarDados();
+            renderizar();
+            
+            document.getElementById('nome').value = '';
+            document.getElementById('valor').value = '';
+            document.getElementById('dataVencimento').value = '';
+            mostrarMensagem("🚀 Empréstimo salvo com sucesso!");
+        }
 
-/** FIREBASE **/
-async function initFirebase() {
-    const key = document.getElementById('fbKey').value.trim();
-    const dom = document.getElementById('fbDomain').value.trim();
-    const proj = document.getElementById('fbProject').value.trim();
-    
-    if(!key || !dom || !proj) return toast('⚠️ Preencha todos os dados!');
-    
-    try {
-        if(!firebase.apps.length) firebase.initializeApp({apiKey:key, authDomain:dom, projectId:proj});
-        db = firebase.firestore();
-        isOnline = true;
-        
-        // Sincronização em tempo real
-        db.collection('loans').onSnapshot(snap => {
-            loans = [];
-            snap.forEach(doc => loans.push({id:doc.id, ...doc.data()}));
-            render();
-        });
-        
-        document.getElementById('dbStatus').innerHTML = '🟢 Online (Firebase)';
-        document.getElementById('dbStatus').style.background = '#4ade80';
-        document.getElementById('dbStatus').style.color = '#000';
-        toast('☁️ Conectado à nuvem!');
-    } catch(e) {
-        console.error(e);
-        toast('❌ Erro conexão Firebase');
-    }
-}
+        function salvarDados() {
+            localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+            localStorage.setItem('historico_finalizados', JSON.stringify(historicoFinalizados));
+        }
 
-/** PDF **/
-function generatePDF() {
-    if(loans.length===0) return toast('⚠️ Sem dados!');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    doc.setFontSize(18); doc.setTextColor(30,60,114); doc.text("Relatório Empréstimos", 14, 20);
-    doc.setFontSize(10); doc.setTextColor(100); doc.text(`Gerado: ${new Date().toLocaleString()}`, 14, 28);
-    
-    const rows = loans.map(l => [
-        l.nome, fmt(l.val), fmt(l.val+getInterest(l)), fmtDate(l.venc), getStatus(l).toUpperCase()
-    ]);
-    
-    doc.autoTable({ startY:35, head:[['Cliente','Valor','Total','Vencimento','Status']], body:rows, theme:'striped', headStyles:{fillColor:[30,60,114]} });
-    doc.save(`relatorio_${Date.now()}.pdf`);
-    toast('📄 PDF Baixado!');
-}
-</script>
+        function mostrarMensagem(texto, cor = '#6366f1') {
+            const alerta = document.getElementById('alerta');
+            alerta.style.backgroundColor = cor;
+            alerta.innerText = texto;
+            alerta.style.display = 'block';
+            setTimeout(() => { alerta.style.display = 'none'; }, 4000);
+        }
+
+        function forçarAtualizacao() {
+            renderizar();
+            mostrarMensagem("🔄 Painel sincronizado!", "#38bdf8");
+        }
+
+        function gerarTextoLembrete(nome, total) {
+            return `Olá ${nome} 😊! Lembrando que o vencimento do seu empréstimo está próximo.\n\n💰 Total (30% juros): R$ ${total.toFixed(2)}\n\nPagamento via PIX:\n🔑 Chave: ${MEU_PIX.chave}\n🏦 Banco: ${MEU_PIX.banco}\n👤 Nome: ${MEU_PIX.nome}\n📍 Local: ${MEU_PIX.cidade}`;
+        }
+
+        function compartilharWhatsApp(nome, total) {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(gerarTextoLembrete(nome, total))}`, '_blank');
+        }
+
+        function copiarLembrete(nome, total) {
+            navigator.clipboard.writeText(gerarTextoLembrete(nome, total)).then(() => {
+                mostrarMensagem("📋 Dados de pagamento copiados!", "var(--primary)");
+            });
+        }
+
+        function finalizarEmprestimo(id, nome) {
+            const item = emprestimos.find(emp => emp.id === id);
+            if (item) {
+                historicoFinalizados.push({
+                    nome: item.nome,
+                    valorInicial: item.valorInicial,
+                    valorTotal: item.valorTotal,
+                    dataFinalizacao: new Date().toLocaleString('pt-BR')
+                });
+            }
+            emprestimos = emprestimos.filter(emp => emp.id !== id);
+            salvarDados();
+            renderizar();
+            alert(`🎉 Empréstimo de ${nome} finalizado! Ele foi movido para a página de histórico.`);
+        }
+
+        function calcularTempo(dataVencimento) {
+            const diferenca = new Date(dataVencimento).getTime() - new Date().getTime();
+            if (diferenca <= 0) return { texto: "⚠️ VENCIDO!", classe: "vencido" };
+            const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+            return { texto: `⏱️ Faltam: ${dias}d ${horas}h ${minutos}m`, classe: "" };
+        }
+
+        function renderizar() {
+            const lista = document.getElementById('listaEmprestimos');
+            lista.innerHTML = '';
+            if(emprestimos.length === 0) {
+                lista.innerHTML = `<p style="color: #64748b;">Nenhum empréstimo ativo no momento. 🌱</p>`;
+                return;
+            }
+            emprestimos.forEach(emp => {
+                const tempo = calcularTempo(emp.vencimento);
+                const card = document.createElement('div');
+                card.className = `card ${tempo.classe}`;
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>👤 ${emp.nome}</h3>
+                        <span class="cronometro">${tempo.texto}</span>
+                    </div>
+                    <p><strong>💵 Valor Inicial:</strong> R$ ${emp.valorInicial.toFixed(2)}</p>
+                    <p><strong>💰 Total (30%):</strong> <span style="color: #f43f5e; font-weight:bold;">R$ ${emp.valorTotal.toFixed(2)}</span></p>
+                    <p><strong>📅 Limite:</strong> ${new Date(emp.vencimento).toLocaleString('pt-BR')}</p>
+                    <div class="pix-box">
+                        <strong>🏦 Pagar para Diego Dias (PagSeguro)</strong><br>
+                        🔑 Celular: <span class="pix-destaque">${MEU_PIX.chave}</span><br>
+                        💲 Valor: <span class="pix-destaque">R$ ${emp.valorTotal.toFixed(2)}</span>
+                    </div>
+                    <div class="actions">
+                        <div class="action-row">
+                            <button class="btn btn-warning" onclick="compartilharWhatsApp('${emp.nome}', ${emp.valorTotal})">🟢 WhatsApp</button>
+                            <button class="btn" style="background:#475569" onclick="copiarLembrete('${emp.nome}', ${emp.valorTotal})">📋 Copiar</button>
+                        </div>
+                        <button class="btn btn-success" onclick="finalizarEmprestimo(${emp.id}, '${emp.nome}')">✅ Dar Baixa e Arquivar</button>
+                    </div>
+                `;
+                lista.appendChild(card);
+            });
+        }
+        setInterval(renderizar, 30000);
+        renderizar();
+    </script>
 </body>
 </html>
