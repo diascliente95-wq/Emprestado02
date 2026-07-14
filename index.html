@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Empréstimos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 {
+            color: #ffd200;
+            margin-bottom: 16px;
+            font-size: 1.2em;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1em;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #ffd200;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+        }
+        .btn-primary:hover { transform: scale(1.03); }
+        .btn-whatsapp {
+            background: #25d366;
+            color: #fff;
+        }
+        .btn-whatsapp:hover { background: #1ebe57; transform: scale(1.03); }
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-reminder {
+            background: #9b59b6;
+            color: #fff;
+        }
+        .btn-reminder:hover { background: #8e44ad; }
+        .btn-share {
+            background: #3498db;
+            color: #fff;
+        }
+        .btn-share:hover { background: #2980b9; }
+        .btn-sm { padding: 8px 14px; font-size: 0.85em; }
+        .loans-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .loans-table th, .loans-table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9em;
+        }
+        .loans-table th {
+            color: #ffd200;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .status-pendente { background: #f39c12; color: #1a1a2e; }
+        .status-pago { background: #27ae60; color: #fff; }
+        .status-atrasado { background: #e74c3c; color: #fff; }
+        .days-count {
+            font-size: 1.8em;
+            font-weight: 700;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .days-count.urgent { color: #e74c3c; }
+        .days-count.warning { color: #f39c12; }
+        .days-count.safe { color: #27ae60; }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+        .summary-item .value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #ffd200;
+        }
+        .summary-item .label {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-top: 4px;
+        }
+        .loan-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 14px;
+            border-left: 4px solid #ffd200;
+        }
+        .loan-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .loan-card-header h3 { font-size: 1.1em; }
+        .loan-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+        }
+        .loan-detail span { color: #aaa; }
+        .loan-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal h2 { color: #ffd200; margin-bottom: 20px; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .interest-display {
+            background: rgba(247, 151, 30, 0.15);
+            border: 1px solid #f7971e;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            margin-top: 8px;
+        }
+        .interest-display .rate {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #ffd200;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .empty-state .icon { font-size: 3em; margin-bottom: 10px; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 8px;
+            z-index: 200;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            color: #aaa;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: rgba(247, 151, 30, 0.2);
+            border-color: #ffd200;
+            color: #ffd200;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .summary-cards { grid-template-columns: 1fr; }
+            .loan-detail { grid-template-columns: 1fr; }
+            .loan-actions { flex-direction: column; }
+            .btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PAINEL DE EMPRÉSTIMOS</h1>
+
+        <div class="summary-cards" id="summaryCards">
+            <div class="summary-item">
+                <div class="value" id="totalEmprestimos">0</div>
+                <div class="label">Total Empréstimos</div>
+            </div>
+            <div class="summary-item">
+                <div class="value" id="totalPendente">R$ 0,00</div>
+                <div class="label">Pendente</div>
+            </div>
+            <div class="summary-item">
+                <div class="value" id="totalJuros">R$ 0,00</div>
+                <div class="label">Juros Acumulados</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('cadastro')">Novo Empréstimo</div>
+            <div class="tab" onclick="showTab('lista')">Lista de Empréstimos</div>
+            <div class="tab" onclick="showTab('lembretes')">Lembretes</div>
+        </div>
+
+        <!-- CADASTRO -->
+        <div class="tab-content active" id="tab-cadastro">
+            <div class="card">
+                <h2>Novo Empréstimo</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome do Devedor</label>
+                        <input type="text" id="nomeDevedor" placeholder="Nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone (WhatsApp)</label>
+                        <input type="tel" id="telefoneDevedor" placeholder="(00) 00000-0000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor Emprestado (R$)</label>
+                        <input type="number" id="valorEmprestado" placeholder="0,00" step="0.01" oninput="calcularValorTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Juros (% ao mês)</label>
+                        <input type="number" id="taxaJuros" value="30" step="0.1" oninput="calcularValorTotal()">
+                    </div>
+                </div>
+                <div class="interest-display">
+                    Taxa de Juros: <span class="rate" id="jurosDisplay">30%</span> ao mês
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor Total (com juros)</label>
+                        <input type="text" id="valorTotal" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Vencimento</label>
+                        <input type="date" id="dataVencimento">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="observacoes" rows="2" placeholder="Detalhes do empréstimo..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="salvarEmprestimo()">Cadastrar Empréstimo</button>
+            </div>
+        </div>
+
+        <!-- LISTA -->
+        <div class="tab-content" id="tab-lista">
+            <div class="card">
+                <h2>Empréstimos Registrados</h2>
+                <div id="listaEmprestimos">
+                    <div class="empty-state">
+                        <div class="icon">&#128176;</div>
+                        <p>Nenhum empréstimo registrado ainda.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEMBRETES -->
+        <div class="tab-content" id="tab-lembretes">
+            <div class="card">
+                <h2>Lembretes Automáticos</h2>
+                <p style="color:#aaa; margin-bottom:16px;">Envie lembretes via WhatsApp para os devedores.</p>
+                <div id="listaLembretes">
+                    <div class="empty-state">
+                        <div class="icon">&#128276;</div>
+                        <p>Nenhum lembrete pendente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COMPARTILHAR -->
+    <div class="modal-overlay" id="modalCompartilhar">
+        <div class="modal">
+            <h2>Compartilhar via WhatsApp</h2>
+            <div id="previewMensagem"></div>
+            <div class="modal-actions">
+                <button class="btn btn-sm" style="background:#555;color:#fff;" onclick="fecharModal('modalCompartilhar')">Cancelar</button>
+                <button class="btn btn-sm btn-whatsapp" onclick="enviarWhatsApp()">Enviar no WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LEMBRETE -->
+    <div class="modal-overlay" id="modalLembrete">
+        <div class="modal">
+            <h2>Enviar Lembrete</h2>
+            <div id="previewLembrete"></div>
+            <div class="modal-actions">
+                <button class="btn btn-sm" style="background:#555;color:#fff;" onclick="fecharModal('modalLembrete')">Cancelar</button>
+                <button class="btn btn-sm btn-whatsapp" onclick="enviarLembreteWhatsApp()">Enviar Lembrete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div class="modal-overlay" id="modalEditar">
+        <div class="modal">
+            <h2>Editar Empréstimo</h2>
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label>Nome do Devedor</label>
+                <input type="text" id="editNome">
+            </div>
+            <div class="form-group">
+                <label>Telefone</label>
+                <input type="tel" id="editTelefone">
+            </div>
+            <div class="form-group">
+                <label>Valor Emprestado</label>
+                <input type="number" id="editValor" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Taxa de Juros (%)</label>
+                <input type="number" id="editJuros" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Data de Vencimento</label>
+                <input type="date" id="editVencimento">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editStatus">
+                    <option value="pendente">Pendente</option>
+                    <option value="pago">Pago</option>
+                    <option value="atrasado">Atrasado</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Observações</label>
+                <textarea id="editObs" rows="2"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-sm" style="background:#555;color:#fff;" onclick="fecharModal('modalEditar')">Cancelar</button>
+                <button class="btn btn-sm btn-primary" onclick="salvarEdicao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let emprestimos = JSON.parse(localStorage.getItem('emprestimos') || '[]');
+        let lembreteAtual = null;
+
+        function salvarDados() {
+            localStorage.setItem('emprestimos', JSON.stringify(emprestimos));
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function calcularValorTotal() {
+            const valor = parseFloat(document.getElementById('valorEmprestado').value) || 0;
+            const juros = parseFloat(document.getElementById('taxaJuros').value) || 0;
+            const total = valor + (valor * juros / 100);
+            document.getElementById('valorTotal').value = total.toFixed(2);
+            document.getElementById('jurosDisplay').textContent = juros + '%';
+        }
+
+        function salvarEmprestimo() {
+            const nome = document.getElementById('nomeDevedor').value.trim();
+            const telefone = document.getElementById('telefoneDevedor').value.trim();
+            const valor = parseFloat(document.getElementById('valorEmprestado').value);
+            const juros = parseFloat(document.getElementById('taxaJuros').value) || 30;
+            const vencimento = document.getElementById('dataVencimento').value;
+            const obs = document.getElementById('observacoes').value.trim();
+
+            if (!nome) { alert('Informe o nome do devedor.'); return; }
+            if (!valor || valor <= 0) { alert('Informe um valor válido.'); return; }
+            if (!vencimento) { alert('Informe a data de vencimento.'); return; }
+
+            const total = valor + (valor * juros / 100);
+
+            const emp = {
+                id: Date.now(),
+                nome,
+                telefone: telefone.replace(/\D/g, ''),
+                valor,
+                juros,
+                total,
+                vencimento,
+                obs,
+                status: 'pendente',
+                criadoEm: new Date().toISOString()
+            };
+
+            emprestimos.push(emp);
+            salvarDados();
+            renderizarTudo();
+            limparFormulario();
+            showToast('Empréstimo cadastrado com sucesso!');
+        }
+
+        function limparFormulario() {
+            document.getElementById('nomeDevedor').value = '';
+            document.getElementById('telefoneDevedor').value = '';
+            document.getElementById('valorEmprestado').value = '';
+            document.getElementById('taxaJuros').value = '30';
+            document.getElementById('valorTotal').value = '';
+            document.getElementById('dataVencimento').value = '';
+            document.getElementById('observacoes').value = '';
+            document.getElementById('jurosDisplay').textContent = '30%';
+        }
+
+        function diasRestantes(vencimento) {
+            const hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            const vencto = new Date(vencimento + 'T00:00:00');
+            const diff = Math.ceil((vencto - hoje) / (1000 * 60 * 60 * 24));
+            return diff;
+        }
+
+        function formatarData(iso) {
+            const d = new Date(iso + 'T00:00:00');
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function renderizarTudo() {
+            renderizarResumo();
+            renderizarLista();
+            renderizarLembretes();
+        }
+
+        function renderizarResumo() {
+            const total = emprestimos.length;
+            const pendente = emprestimos
+                .filter(e => e.status !== 'pago')
+                .reduce((s, e) => s + e.total, 0);
+            const juros = emprestimos
+                .filter(e => e.status !== 'pago')
+                .reduce((s, e) => s + (e.total - e.valor), 0);
+
+            document.getElementById('totalEmprestimos').textContent = total;
+            document.getElementById('totalPendente').textContent = formatarMoeda(pendente);
+            document.getElementById('totalJuros').textContent = formatarMoeda(juros);
+        }
+
+        function renderizarLista() {
+            const container = document.getElementById('listaEmprestimos');
+            if (emprestimos.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">&#128176;</div><p>Nenhum empréstimo registrado ainda.</p></div>';
+                return;
+            }
+
+            let html = '';
+            emprestimos.slice().reverse().forEach(emp => {
+                const dias = diasRestantes(emp.vencimento);
+                let statusClass = 'status-' + emp.status;
+                let statusLabel = emp.status.charAt(0).toUpperCase() + emp.status.slice(1);
+                let daysClass = 'safe';
+                let daysText = dias + ' dias restantes';
+
+                if (emp.status === 'pago') {
+                    daysText = 'QUITADO';
+                    daysClass = 'safe';
+                } else if (dias < 0) {
+                    daysText = Math.abs(dias) + ' dias atrasado';
+                    daysClass = 'urgent';
+                    statusClass = 'status-atrasado';
+                    statusLabel = 'Atrasado';
+                } else if (dias === 0) {
+                    daysText = 'Vence HOJE';
+                    daysClass = 'warning';
+                } else if (dias <= 7) {
+                    daysClass = 'warning';
+                }
+
+                html += `
+                <div class="loan-card" style="border-left-color: ${emp.status === 'pago' ? '#27ae60' : daysClass === 'urgent' ? '#e74c3c' : '#ffd200'}">
+                    <div class="loan-card-header">
+                        <h3>${emp.nome}</h3>
+                        <span class="status-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div class="loan-detail">
+                        <div><span>Valor Emprestado:</span> ${formatarMoeda(emp.valor)}</div>
+                        <div><span>Juros (${emp.juros}%):</span> ${formatarMoeda(emp.total - emp.valor)}</div>
+                        <div><span>Total a Pagar:</span> <strong>${formatarMoeda(emp.total)}</strong></div>
+                        <div><span>Vencimento:</span> ${formatarData(emp.vencimento)}</div>
+                        <div><span>Telefone:</span> ${emp.telefone || 'Não informado'}</div>
+                        <div class="days-count ${daysClass}" style="font-size:1.1em;">${daysText}</div>
+                    </div>
+                    ${emp.obs ? '<div style="color:#aaa;font-size:0.85em;margin-bottom:10px;">Obs: ' + emp.obs + '</div>' : ''}
+                    <div class="loan-actions">
+                        <button class="btn btn-sm btn-whatsapp" onclick="compartilharWhatsApp(${emp.id})">Compartilhar</button>
+                        <button class="btn btn-sm btn-reminder" onclick="abrirLembrete(${emp.id})">Lembrete</button>
+                        <button class="btn btn-sm btn-share" onclick="editarEmprestimo(${emp.id})">Editar</button>
+                        ${emp.status !== 'pago' ? '<button class="btn btn-sm btn-primary" onclick="marcarPago(' + emp.id + ')">Marcar Pago</button>' : ''}
+                        <button class="btn btn-sm btn-danger" onclick="excluirEmprestimo(${emp.id})">Excluir</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderizarLembretes() {
+            const container = document.getElementById('listaLembretes');
+            const pendentes = emprestimos.filter(e => e.status !== 'pago');
+
+            if (pendentes.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">&#128276;</div><p>Nenhum lembrete pendente.</p></div>';
+                return;
+            }
+
+            let html = '';
+            pendentes.forEach(emp => {
+                const dias = diasRestantes(emp.vencimento);
+                let urgencia = 'Vence em ' + dias + ' dias';
+                let cor = '#27ae60';
+                if (dias < 0) { urgencia = Math.abs(dias) + ' dias atrasado'; cor = '#e74c3c'; }
+                else if (dias === 0) { urgencia = 'Vence HOJE!'; cor = '#f39c12'; }
+                else if (dias <= 3) { cor = '#e74c3c'; }
+                else if (dias <= 7) { cor = '#f39c12'; }
+
+                html += `
+                <div class="loan-card" style="border-left-color:${cor};">
+                    <div class="loan-card-header">
+                        <h3>${emp.nome}</h3>
+                        <span style="color:${cor};font-weight:600;">${urgencia}</span>
+                    </div>
+                    <div class="loan-detail">
+                        <div><span>Total:</span> ${formatarMoeda(emp.total)}</div>
+                        <div><span>Vencimento:</span> ${formatarData(emp.vencimento)}</div>
+                    </div>
+                    <div class="loan-actions">
+                        <button class="btn btn-sm btn-whatsapp" onclick="enviarLembreteDireto(${emp.id})">Enviar Lembrete no Zap</button>
+                        <button class="btn btn-sm btn-reminder" onclick="enviarLembreteCustom(${emp.id})">Lembrete Personalizado</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function gerarMensagemWhatsApp(emp) {
+            const dias = diasRestantes(emp.vencimento);
+            let msg = `Olá, ${emp.nome}!\n\n`;
+            msg += `Refente ao empréstimo realizado:\n`;
+            msg += `💰 Valor emprestado: ${formatarMoeda(emp.valor)}\n`;
+            msg += `📈 Juros (${emp.juros}% ao mês): ${formatarMoeda(emp.total - emp.valor)}\n`;
+            msg += `💵 Total a pagar: ${formatarMoeda(emp.total)}\n`;
+            msg += `📅 Vencimento: ${formatarData(emp.vencimento)}\n\n`;
+
+            if (dias < 0) {
+                msg += `⚠️ ATTENÇÃO: Este empréstimo está ${Math.abs(dias)} dias ATRASADO!\n`;
+                msg += `Por favor, regularize o mais breve possível.\n\n`;
+            } else if (dias === 0) {
+                msg += `⚠️ O vencimento é HOJE!\n`;
+                msg += `Por favor, efetue o pagamento.\n\n`;
+            } else {
+                msg += `⏰ Faltam ${dias} dia(s) para o vencimento.\n\n`;
+            }
+
+            msg += `Aguardamos seu retorno!`;
+            return msg;
+        }
+
+        function gerarMensagemLembrete(emp) {
+            const dias = diasRestantes(emp.vencimento);
+            let msg = `🔔 LEMBRETE - Empréstimo\n\n`;
+            msg += `Olá, ${emp.nome}!\n\n`;
+
+            if (dias < 0) {
+                msg += `❌ Seu empréstimo de ${formatarMoeda(emp.total)} está ${Math.abs(dias)} dias atrasado.\n`;
+                msg += `Por favor, entre em contato para regularizar.\n\n`;
+            } else if (dias === 0) {
+                msg += `⏰ Hoje é o dia do vencimento do seu empréstimo!\n`;
+                msg += `Valor: ${formatarMoeda(emp.total)}\n\n`;
+            } else {
+                msg += `Seu empréstimo vence em ${dias} dia(s) (${formatarData(emp.vencimento)}).\n`;
+                msg += `Valor a pagar: ${formatarMoeda(emp.total)}\n\n`;
+            }
+
+            msg += `Qualquer dúvida, entre em contato.`;
+            return msg;
+        }
+
+        function compartilharWhatsApp(id) {
+            const emp = emprestimos.find(e => e.id === id);
+            if (!emp) return;
+            lembreteAtual = emp;
+            const msg = gerarMensagemWhatsApp(emp);
+            document.getElementById('previewMensagem').innerHTML = '<pre style="background:rgba(255,255,255,0.05);padding:14px;border-radius:8px;white-space:pre-wrap;font-size:0.9em;">' + msg + '</pre>';
+            document.getElementById('modalCompartilhar').classList.add('active');
+        }
+
+        function enviarWhatsApp() {
+            if (!lembreteAtual) return;
+            const tel = lembreteAtual.telefone;
+            const msg = gerarMensagemWhatsApp(lembreteAtual);
+            const url = `https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+            fecharModal('modalCompartilhar');
+            showToast('Abrindo WhatsApp...');
+        }
+
+        function abrirLembrete(id) {
+            const emp = emprestimos.find(e => e.id === id);
+            if (!emp) return;
+            lembreteAtual = emp;
+            const msg = gerarMensagemLembrete(emp);
+            document.getElementById('previewLembrete').innerHTML = '<pre style="background:rgba(255,255,255,0.05);padding:14px;border-radius:8px;white-space:pre-wrap;font-size:0.9em;">' + msg + '</pre>';
+            document.getElementById('modalLembrete').classList.add('active');
+        }
+
+        function enviarLembreteWhatsApp() {
+            if (!lembreteAtual) return;
+            const tel = lembreteAtual.telefone;
+            if (!tel) { alert('Telefone não cadastrado!'); return; }
+            const msg = gerarMensagemLembrete(lembreteAtual);
+            const url = `https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+            fecharModal('modalLembrete');
+            showToast('Lembrete enviado!');
+        }
+
+        function enviarLembreteDireto(id) {
+            const emp = emprestimos.find(e => e.id === id);
+            if (!emp) return;
+            if (!emp.telefone) { alert('Telefone não cadastrado!'); return; }
+            const msg = gerarMensagemLembrete(emp);
+            const url = `https://wa.me/55${emp.telefone}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+            showToast('Lembrete enviado!');
+        }
+
+        function enviarLembreteCustom(id) {
+            const emp = emprestimos.find(e => e.id === id);
+            if (!emp) return;
+            if (!emp.telefone) { alert('Telefone não cadastrado!'); return; }
+            const custom = prompt('Digite sua mensagem personalizada:');
+            if (!custom) return;
+            const url = `https://wa.me/55${emp.telefone}?text=${encodeURIComponent(custom)}`;
+            window.open(url, '_blank');
+            showToast('Mensagem enviada!');
+        }
+
+        function editarEmprestimo(id) {
+            const emp = emprestimos.find(e => e.id === id);
+            if (!emp) return;
+            document.getElementById('editId').value = emp.id;
+            document.getElementById('editNome').value = emp.nome;
+            document.getElementById('editTelefone').value = emp.telefone;
+            document.getElementById('editValor').value = emp.valor;
+            document.getElementById('editJuros').value = emp.juros;
+            document.getElementById('editVencimento').value = emp.vencimento;
+            document.getElementById('editStatus').value = emp.status;
+            document.getElementById('editObs').value = emp.obs || '';
+            document.getElementById('modalEditar').classList.add('active');
+        }
+
+        function salvarEdicao() {
+            const id = parseInt(document.getElementById('editId').value);
+            const emp = emprestimos.find(e => e.id === id);
+            if (!emp) return;
+            emp.nome = document.getElementById('editNome').value.trim();
+            emp.telefone = document.getElementById('editTelefone').value.replace(/\D/g, '');
+            emp.valor = parseFloat(document.getElementById('editValor').value);
+            emp.juros = parseFloat(document.getElementById('editJuros').value);
+            emp.total = emp.valor + (emp.valor * emp.juros / 100);
+            emp.vencimento = document.getElementById('editVencimento').value;
+            emp.status = document.getElementById('editStatus').value;
+            emp.obs = document.getElementById('editObs').value.trim();
+            salvarDados();
+            renderizarTudo();
+            fecharModal('modalEditar');
+            showToast('Empréstimo atualizado!');
+        }
+
+        function marcarPago(id) {
+            if (!confirm('Marcar como PAGO?')) return;
+            const emp = emprestimos.find(e => e.id === id);
+            if (emp) {
+                emp.status = 'pago';
+                salvarDados();
+                renderizarTudo();
+                showToast('Empréstimo quitado!');
+            }
+        }
+
+        function excluirEmprestimo(id) {
+            if (!confirm('Tem certeza que deseja excluir?')) return;
+            emprestimos = emprestimos.filter(e => e.id !== id);
+            salvarDados();
+            renderizarTudo();
+            showToast('Empréstimo excluído.');
+        }
+
+        function fecharModal(id) {
+            document.getElementById(id).classList.remove('active');
+            lembreteAtual = null;
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) fecharModal(this.id);
+            });
+        });
+
+        renderizarTudo();
+    </script>
+</body>
+</html>
